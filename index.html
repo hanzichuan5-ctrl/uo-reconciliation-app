@@ -248,9 +248,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       {channel:'OPPO',entity:'上海幻电',company:'广东欢太科技有限公司'},
       {channel:'uc',entity:'上海幻电',company:'广州爱九游信息技术有限公司'},
       {channel:'vivo',entity:'上海幻电',company:'广东天宸网络科技有限公司'},
-      {channel:'华为',entity:'上海幻电',company:'华为软件技术有限公司',note:'与鸿蒙、荣耀共用开票公司'},
-      {channel:'鸿蒙',entity:'上海幻电',company:'华为软件技术有限公司',note:'与华为、荣耀共用开票公司'},
-      {channel:'荣耀',entity:'上海幻电',company:'华为软件技术有限公司',invoicePolicy:'none',note:'无需开票；与华为、鸿蒙共用开票公司'},
+      {channel:'华为',entity:'上海幻电',company:'华为软件技术有限公司',note:'与鸿蒙共用开票公司'},
+      {channel:'鸿蒙',entity:'上海幻电',company:'华为软件技术有限公司',note:'与华为共用开票公司'},
+      {channel:'荣耀',entity:'上海幻电',company:'深圳荣耀软件技术有限公司',invoicePolicy:'none',note:'无需开票'},
       {channel:'小米',entity:'上海幻电',company:'北京瓦力网络科技有限公司'},
       {channel:'应用宝',entity:'上海幻电',company:'深圳市腾讯计算机系统有限公司'},
       {channel:'快手',entity:'上海幻电',company:'北京慕远科技有限公司'},
@@ -265,9 +265,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       {channel:'OPPO',entity:'芜湖享游',company:'广东欢太科技有限公司'},
       {channel:'uc',entity:'芜湖享游',company:'广州爱九游信息技术有限公司'},
       {channel:'vivo',entity:'芜湖享游',company:'广东天宸网络科技有限公司'},
-      {channel:'华为',entity:'芜湖享游',company:'华为软件技术有限公司',note:'与鸿蒙、荣耀共用开票公司'},
-      {channel:'鸿蒙',entity:'芜湖享游',company:'华为软件技术有限公司',note:'与华为、荣耀共用开票公司'},
-      {channel:'荣耀',entity:'芜湖享游',company:'华为软件技术有限公司',invoicePolicy:'none',note:'无需开票；与华为、鸿蒙共用开票公司'},
+      {channel:'华为',entity:'芜湖享游',company:'华为软件技术有限公司',note:'与鸿蒙共用开票公司'},
+      {channel:'鸿蒙',entity:'芜湖享游',company:'华为软件技术有限公司',note:'与华为共用开票公司'},
+      {channel:'荣耀',entity:'芜湖享游',company:'深圳荣耀软件技术有限公司',invoicePolicy:'none',note:'无需开票'},
       {channel:'小米',entity:'芜湖享游',company:'北京瓦力网络科技有限公司'},
       {channel:'应用宝',entity:'芜湖享游',company:'深圳市腾讯计算机系统有限公司'},
       {channel:'当乐',entity:'芜湖享游',company:'北京当乐信息技术有限公司'},
@@ -304,7 +304,8 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function hydrateUoRule(rule,index=0){ return {...rule,id:rule.id||`uo-rule-${index+1}`,note:rule.note||'',invoicePolicy:rule.invoicePolicy==='none'?'none':'normal',active:rule.active!==false,channelKey:normalizeText(rule.channel),companyKey:normalizeText(rule.company),strictKey:strictCompanyKey(rule.company)}; }
     function loadIndieRules(){ try{const saved=JSON.parse(localStorage.getItem(RULE_STORAGE_KEY)||'null');if(Array.isArray(saved)&&saved.length)return saved.map(hydrateRule)}catch(err){console.warn('Mapping rules could not be loaded',err)} return INDIE_RULE_SEEDS.map(hydrateRule); }
     function saveIndieRules(){ try{localStorage.setItem(RULE_STORAGE_KEY,JSON.stringify(INDIE_RULES.map(({strictKey,coreKey,aliasKeys,...rule})=>rule)))}catch(err){toast('Mapping 规则无法写入本地存储',true)} }
-    function loadUoRules(){ try{const saved=JSON.parse(localStorage.getItem(UO_RULE_STORAGE_KEY)||'null');if(Array.isArray(saved)&&saved.length)return saved.map(hydrateUoRule)}catch(err){console.warn('UO mapping rules could not be loaded',err)} return UO_RULE_SEEDS.map(hydrateUoRule); }
+    function migrateUoRule(rule){ const next={...rule}; const channel=normalizeText(next.channel),company=normalizeText(next.company); if(channel==='荣耀'&&company===normalizeText('华为软件技术有限公司')){next.company='深圳荣耀软件技术有限公司';if(!next.note||next.note==='无需开票；与华为、鸿蒙共用开票公司')next.note='无需开票'} if(channel==='华为'&&next.note==='与鸿蒙、荣耀共用开票公司')next.note='与鸿蒙共用开票公司'; if(channel==='鸿蒙'&&next.note==='与华为、荣耀共用开票公司')next.note='与华为共用开票公司'; return next; }
+    function loadUoRules(){ try{const saved=JSON.parse(localStorage.getItem(UO_RULE_STORAGE_KEY)||'null');if(Array.isArray(saved)&&saved.length){const migrated=saved.map(migrateUoRule);if(JSON.stringify(migrated)!==JSON.stringify(saved))localStorage.setItem(UO_RULE_STORAGE_KEY,JSON.stringify(migrated));return migrated.map(hydrateUoRule)}}catch(err){console.warn('UO mapping rules could not be loaded',err)} return UO_RULE_SEEDS.map(hydrateUoRule); }
     function saveUoRules(){ try{localStorage.setItem(UO_RULE_STORAGE_KEY,JSON.stringify(UO_RULES.map(({channelKey,companyKey,strictKey,...rule})=>rule)))}catch(err){toast('UO Mapping 规则无法写入本地存储',true)} }
     let INDIE_RULES = loadIndieRules();
     let UO_RULES = loadUoRules();
