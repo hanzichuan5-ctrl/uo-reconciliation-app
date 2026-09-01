@@ -101,7 +101,7 @@
               <div class="panel kpi"><div class="label">已开票金额</div><div id="kpiInvoice" class="value">—</div><div class="sub">唯一精确或人工确认</div></div>
               <div class="panel kpi"><div class="label">已回款金额</div><div id="kpiBank" class="value">—</div><div class="sub">唯一精确或人工确认</div></div>
               <div class="panel kpi warn"><div class="label">待复核金额</div><div id="kpiReview" class="value">—</div><div class="sub">尾差、重复或组合候选</div></div>
-              <div class="panel kpi risk"><div class="label">未匹配来源</div><div id="kpiUnmatched" class="value">—</div><div class="sub">流水 + 发票</div></div>
+              <div class="panel kpi risk"><div class="label">未匹配来源</div><div id="kpiUnmatched" class="value">—</div><div id="kpiUnmatchedSub" class="sub">流水 + 发票</div></div>
             </div>
 
             <section class="panel work-panel">
@@ -532,9 +532,21 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       els.toggleUpload.textContent=els.uploadPanel.classList.contains('is-collapsed')?'查看文件':'收起文件';
     }
     function setupMonths(){ els.month.innerHTML=state.months.length?state.months.map(m=>`<option value="${m}" ${m===state.month?'selected':''}>${m}</option>`).join(''):'<option>—</option>'; els.month.disabled=!state.months.length; els.reset.disabled=false; els.export.disabled=!state.months.length||state.checks.some(c=>c.level==='error'); }
-    function currentFiltered(){
-      const entity=$('#filterEntity').value,channel=$('#filterChannel').value,period=$('#filterPeriod').value,invoice=$('#filterInvoice').value,bank=$('#filterBank').value,q=normalizeText($('#filterSearch').value);
+    function activeReconcileFilters(){
+      const filters={entity:$('#filterEntity').value,channel:$('#filterChannel').value,period:$('#filterPeriod').value,invoice:$('#filterInvoice').value,bank:$('#filterBank').value,q:normalizeText($('#filterSearch').value)};
+      filters.active=!!(filters.entity||filters.channel||filters.period||filters.invoice||filters.bank||filters.q);
+      return filters;
+    }
+    function currentFiltered(filters=activeReconcileFilters()){
+      const {entity,channel,period,invoice,bank,q}=filters;
       return state.results.filter(r=>(!entity||r.entity===entity)&&(!channel||r.channel===channel)&&(!period||r.period===period)&&(!invoice||finalSide(r,'invoice').status===invoice)&&(!bank||finalSide(r,'bank').status===bank)&&(!q||normalizeText(r.company+r.channel).includes(q)));
+    }
+    function filteredUnmatched(rows,filters=activeReconcileFilters()){
+      const banks=unmatched('bank'),invoices=unmatched('invoice');
+      if(!filters.active)return {banks,invoices};
+      const visibleCompanies=new Set(rows.map(r=>`${r.entity}|${r.companyKey}`));
+      const inVisibleScope=source=>visibleCompanies.has(`${source.entity}|${source.companyKey}`);
+      return {banks:banks.filter(inVisibleScope),invoices:invoices.filter(inVisibleScope)};
     }
     function fillSelect(id,values,label){ const el=$(id),cur=el.value; el.innerHTML=`<option value="">${label}</option>`+[...new Set(values)].sort().map(v=>`<option ${v===cur?'selected':''}>${esc(v)}</option>`).join(''); }
     function renderFilters(){ fillSelect('#filterEntity',state.results.map(r=>r.entity),'全部主体'); fillSelect('#filterChannel',state.results.map(r=>r.channel),'全部渠道'); fillSelect('#filterPeriod',state.results.map(r=>r.period),'全部账期'); fillSelect('#filterInvoice',state.results.map(r=>finalSide(r,'invoice').status),'全部开票状态'); fillSelect('#filterBank',state.results.map(r=>finalSide(r,'bank').status),'全部回款状态'); }
@@ -595,6 +607,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     }
     function renderResults(){
       const rows=currentFiltered(); $('#resultCount').textContent=`显示 ${rows.length} / ${state.results.length} 组`; $('#countResults').textContent=state.results.length;
+      renderKpis(rows);
       if(!rows.length){els.resultBody.innerHTML='<tr><td colspan="11"><div class="empty"><strong>没有符合条件的记录</strong>调整筛选条件，或在异常页查看未匹配来源。</div></td></tr>';return}
       els.resultBody.innerHTML=rows.map(r=>{ const inv=finalSide(r,'invoice'),bank=finalSide(r,'bank'),open=state.expanded.has(r.id),ov=overrideFor(r.id); return `<tr data-row="${r.id}"><td><button class="expand-btn ${open?'open':''}" data-action="expand" data-id="${r.id}" aria-label="展开来源">›</button></td><td>${esc(r.entity)}</td><td><strong>${esc(r.channel)}</strong></td><td class="company">${esc(r.company)}${r.items.length>1?`<div style="font-size:11px;color:var(--muted)">${r.items.length} 条申请已汇总</div>`:''}</td><td>${esc(r.period)}</td><td class="num">¥ ${money(r.amount)}</td><td><select class="status ${statusClass(inv.status)}" data-action="status" data-side="invoice" data-id="${r.id}">${statusOptions('invoice',inv.status)}</select></td><td class="num">${inv.amount?'¥ '+money(inv.amount):'—'}</td><td><select class="status ${statusClass(bank.status)}" data-action="status" data-side="bank" data-id="${r.id}">${statusOptions('bank',bank.status)}</select></td><td class="num">${bank.amount?'¥ '+money(bank.amount):'—'}</td><td><input class="note-input" data-action="note" data-id="${r.id}" value="${esc(ov.note)}" placeholder="可填写复核说明"></td></tr>${open?detailRow(r):''}`; }).join('');
     }
@@ -607,11 +620,11 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       els.invoiceBody.innerHTML=invoices.length?invoices.map(x=>`<tr><td>${esc(x.entity||'未识别')}</td><td>${esc(x.date)}</td><td class="company">${esc(x.company)}</td><td class="num">¥ ${money(x.amount)}</td><td>${esc(x.status)}</td><td>${esc(x.positive)}</td><td>${esc(x.reason||'未找到 Mapping 匹配')}</td><td>${esc(x.file)}</td></tr>`).join(''):'<tr><td colspan="8"><div class="empty"><strong>本月发票均已关联</strong>没有未匹配发票。</div></td></tr>';
     }
     function renderChecks(){ const issues=state.checks.filter(c=>c.level!=='ok'); els.checkList.innerHTML=issues.map(c=>`<div class="check ${c.level}"><i></i><div><div class="msg">${esc(c.msg)}</div>${c.detail?`<div class="detail">${esc(c.detail)}</div>`:''}</div></div>`).join('')||(state.fileReports.length?'<div class="check"><i></i><div><div class="msg">导入校验通过</div><div class="detail">文件结构、主体与必需数据均已识别。</div></div></div>':''); renderImportStatus(); }
-    function renderKpis(){ const expected=sum(state.results.map(r=>r.amount)), invoiced=sum(state.results.filter(r=>finalSide(r,'invoice').status==='已开票').map(r=>r.amount)), banked=sum(state.results.filter(r=>finalSide(r,'bank').status==='已回款').map(r=>r.amount)); const review=sum(state.results.filter(r=>['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'invoice').status)||['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'bank').status)).map(r=>r.amount));
-      $('#kpiExpected').textContent='¥ '+money(expected);$('#kpiRows').textContent=`${state.results.length} 组 Mapping`;$('#kpiInvoice').textContent='¥ '+money(invoiced);$('#kpiBank').textContent='¥ '+money(banked);$('#kpiReview').textContent='¥ '+money(review);$('#kpiUnmatched').textContent=unmatched('bank').length+unmatched('invoice').length;
+    function renderKpis(rows=currentFiltered()){ const filters=activeReconcileFilters(), expected=sum(rows.map(r=>r.amount)), invoiced=sum(rows.filter(r=>finalSide(r,'invoice').status==='已开票').map(r=>r.amount)), banked=sum(rows.filter(r=>finalSide(r,'bank').status==='已回款').map(r=>r.amount)); const review=sum(rows.filter(r=>['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'invoice').status)||['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'bank').status)).map(r=>r.amount)), scopedUnmatched=filteredUnmatched(rows,filters);
+      $('#kpiExpected').textContent='¥ '+money(expected);$('#kpiRows').textContent=filters.active?`筛选后 ${rows.length} / ${state.results.length} 组 Mapping`:`${rows.length} 组 Mapping`;$('#kpiInvoice').textContent='¥ '+money(invoiced);$('#kpiBank').textContent='¥ '+money(banked);$('#kpiReview').textContent='¥ '+money(review);$('#kpiUnmatched').textContent=scopedUnmatched.banks.length+scopedUnmatched.invoices.length;$('#kpiUnmatchedSub').textContent=filters.active?'当前筛选范围 · 流水 + 发票':'流水 + 发票';
     }
     function updateNavigationCounts(){ $('#navCountReconcile').textContent=state.month?state.results.length:'—'; $('#navCountIndie').textContent=state.month?state.indieMatches.length:'—'; $('#navCountMapping').textContent=UO_RULES.filter(r=>r.active!==false).length+INDIE_RULES.filter(r=>r.active!==false).length; }
-    function renderAll(){ const ready=state.months.length>0; els.workspace.className=ready?'show':''; els.indieEmpty.hidden=ready; els.indieContent.hidden=!ready; $('#piplupMascot').classList.toggle('compact',ready); if(ready){state.indieMatches=classifyIndieBanks(); const ignoredBanks=state.banks.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length, ignoredInvoices=state.invoices.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length; addCheckOnce('ok','非 UO 来源已排除',`按当年 Mapping 公司范围，忽略非 UO 收入流水 ${ignoredBanks} 行、非 UO 发票 ${ignoredInvoices} 行。`); renderFilters();renderResults();renderUnmatched();renderIndie();renderKpis();} else state.indieMatches=[]; renderMapping();renderChecks();updateNavigationCounts(); }
+    function renderAll(){ const ready=state.months.length>0; els.workspace.className=ready?'show':''; els.indieEmpty.hidden=ready; els.indieContent.hidden=!ready; $('#piplupMascot').classList.toggle('compact',ready); if(ready){state.indieMatches=classifyIndieBanks(); const ignoredBanks=state.banks.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length, ignoredInvoices=state.invoices.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length; addCheckOnce('ok','非 UO 来源已排除',`按当年 Mapping 公司范围，忽略非 UO 收入流水 ${ignoredBanks} 行、非 UO 发票 ${ignoredInvoices} 行。`); renderFilters();renderResults();renderUnmatched();renderIndie();} else state.indieMatches=[]; renderMapping();renderChecks();updateNavigationCounts(); }
     function updatePageHeader(){ const meta=PAGE_META[state.currentModule]||PAGE_META.reconcile; $('#pageTitle').textContent=meta.title; $('#pageLead').textContent=meta.lead; }
     function updateNavCollapsed(){ const shell=$('#appShell'),button=$('#navCollapseBtn'),collapsed=state.navCollapsed; shell.classList.toggle('nav-collapsed',collapsed); button.setAttribute('aria-expanded',String(!collapsed)); button.setAttribute('aria-label',collapsed?'展开工作区':'收起工作区'); button.title=collapsed?'展开工作区':'收起工作区'; button.querySelector('span').textContent=collapsed?'›':'‹'; }
     function toggleNavCollapsed(){ state.navCollapsed=!state.navCollapsed; try{localStorage.setItem(NAV_STORAGE_KEY,state.navCollapsed?'collapsed':'expanded')}catch{} updateNavCollapsed(); }
