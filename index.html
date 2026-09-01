@@ -98,9 +98,9 @@
           <section id="workspace">
             <div class="kpis">
               <div class="panel kpi"><div class="label">本月关联申请金额</div><div id="kpiExpected" class="value">—</div><div id="kpiRows" class="sub">—</div></div>
-              <div class="panel kpi"><div class="label">已开票金额</div><div id="kpiInvoice" class="value">—</div><div class="sub">唯一精确或人工确认</div></div>
-              <div class="panel kpi"><div class="label">已回款金额</div><div id="kpiBank" class="value">—</div><div class="sub">唯一精确或人工确认</div></div>
-              <div class="panel kpi warn"><div class="label">待复核金额</div><div id="kpiReview" class="value">—</div><div class="sub">尾差、重复或组合候选</div></div>
+              <div class="panel kpi"><div class="label">已开票金额</div><div id="kpiInvoice" class="value">—</div><div class="sub">唯一精确（含组合）或人工确认</div></div>
+              <div class="panel kpi"><div class="label">已回款金额</div><div id="kpiBank" class="value">—</div><div class="sub">唯一精确（含组合）或人工确认</div></div>
+              <div class="panel kpi warn"><div class="label">待复核金额</div><div id="kpiReview" class="value">—</div><div class="sub">尾差、重复或多解组合</div></div>
               <div class="panel kpi risk"><div class="label">未匹配来源</div><div id="kpiUnmatched" class="value">—</div><div id="kpiUnmatchedSub" class="sub">流水 + 发票</div></div>
             </div>
 
@@ -459,22 +459,51 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       return [...map.values()];
     }
     function addCheckOnce(level,msg,detail){ if(!state.checks.some(c=>c.msg===msg)) addCheck(level,msg,detail); }
+    function exactSubsetMatch(rows,target){
+      const targetCents=cents(target), usable=rows.map(row=>({row,amount:cents(row.amount)})).filter(x=>x.amount>0&&x.amount<=targetCents);
+      if(targetCents<=0||!usable.length) return {kind:'none',ids:[]};
+      const states=new Map([[0,{count:1,ids:[]}]]), maxStates=100000;
+      for(const item of usable){
+        const snapshot=[...states.entries()].map(([subtotal,hit])=>[subtotal,{count:hit.count,ids:hit.ids}]);
+        for(const [subtotal,hit] of snapshot){
+          const next=subtotal+item.amount; if(next>targetCents) continue;
+          const existing=states.get(next), ids=[...hit.ids,item.row.id];
+          if(!existing) states.set(next,{count:hit.count,ids});
+          else existing.count=Math.min(2,existing.count+hit.count);
+        }
+        if(states.size>maxStates) return {kind:'overflow',ids:[]};
+      }
+      const hit=states.get(targetCents);
+      if(!hit) return {kind:'none',ids:[]};
+      return hit.count===1?{kind:'unique',ids:hit.ids}:{kind:'multiple',ids:[]};
+    }
     function sideResult(group,type,groups,sources){
       const eligible=sources.filter(s=>s.entity===group.entity&&s.companyKey===group.companyKey&&(type==='invoice'?s.valid:s.valid&&s.currency==='CNY'));
-      const exact=eligible.filter(s=>cents(s.amount)===cents(group.amount));
-      const sourceUnique = s => groups.filter(g=>g.entity===group.entity&&g.companyKey===group.companyKey&&cents(g.amount)===cents(s.amount)).length===1;
       const okLabel=type==='invoice'?'已开票':'已回款';
-      if(exact.length===1&&sourceUnique(exact[0])) return {systemStatus:okLabel,matchType:'唯一精确匹配',matchedIds:[exact[0].id],candidateIds:eligible.map(x=>x.id),systemAmount:exact[0].amount};
-      if(exact.length) return {systemStatus:'冲突待复核',matchType:'存在重复金额候选',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
+      const exact=exactSubsetMatch(eligible,group.amount);
+      if(exact.kind==='unique') return {systemStatus:okLabel,matchType:exact.ids.length===1?'唯一精确匹配':'唯一精确组合匹配',matchedIds:exact.ids,candidateIds:eligible.map(x=>x.id),systemAmount:group.amount};
+      if(exact.kind==='multiple') return {systemStatus:'冲突待复核',matchType:'存在多个精确组合候选',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
+      if(exact.kind==='overflow') return {systemStatus:'待复核',matchType:'候选过多，无法判定唯一组合',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
       const near=eligible.filter(s=>{const d=Math.abs(round2(s.amount-group.amount));return d>0&&d<=1});
       if(near.length) return {systemStatus:'待复核',matchType:'金额尾差不超过 1 元',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
       if(hasNearCombination(eligible,group.amount)) return {systemStatus:'待复核',matchType:'多笔合计存在匹配候选',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
       return {systemStatus:'本月未匹配',matchType:'未找到金额候选',matchedIds:[],candidateIds:eligible.map(x=>x.id),systemAmount:0};
     }
     function hasNearCombination(rows,target){ const a=rows.slice(0,18); for(let i=0;i<a.length;i++) for(let j=i+1;j<a.length;j++){ if(Math.abs(round2(a[i].amount+a[j].amount-target))<=1) return true; } return false; }
+    function resolveAutomaticSourceConflicts(results,type){
+      const okLabel=type==='invoice'?'已开票':'已回款', claims=new Map();
+      for(const result of results){
+        const side=result[type]; if(side.systemStatus!==okLabel) continue;
+        for(const id of side.matchedIds){ if(!claims.has(id)) claims.set(id,[]); claims.get(id).push(result); }
+      }
+      const conflicted=new Set([...claims.values()].filter(rows=>rows.length>1).flat());
+      for(const result of conflicted) result[type]={...result[type],systemStatus:'冲突待复核',matchType:'同一来源同时命中多个申请组',matchedIds:[],systemAmount:0};
+    }
     function reconcile(){
       if(!state.month){state.results=[];return} const groups=groupsForMonth(), banks=state.banks.filter(r=>r.month===state.month), invoices=state.invoices.filter(r=>r.month===state.month);
-      state.results=groups.map(g=>{const bank=sideResult(g,'bank',groups,banks), invoice=sideResult(g,'invoice',groups,invoices); return {...g,bank,invoice};}).filter(r=>r.bank.systemStatus!=='本月未匹配'||r.invoice.systemStatus!=='本月未匹配');
+      const results=groups.map(g=>{const bank=sideResult(g,'bank',groups,banks), invoice=sideResult(g,'invoice',groups,invoices); return {...g,bank,invoice};});
+      resolveAutomaticSourceConflicts(results,'bank'); resolveAutomaticSourceConflicts(results,'invoice');
+      state.results=results.filter(r=>r.bank.systemStatus!=='本月未匹配'||r.invoice.systemStatus!=='本月未匹配');
       addCheckOnce('ok',`核对月份：${state.month}`,`本月收入流水 ${banks.length} 行，发票 ${invoices.length} 行，关联 Mapping ${state.results.length} 组。`);
     }
     function overrideFor(id){ return state.overrides[id]||(state.overrides[id]={note:'',bank:{status:'',selected:null},invoice:{status:'',selected:null}}); }
