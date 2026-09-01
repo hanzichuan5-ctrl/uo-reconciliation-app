@@ -371,11 +371,12 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const chosen=activeYear?sheets.filter(s=>sheetYear(s.name)===activeYear):sheets;
       if(chosen.length<sheets.length) addCheck('ok',`Mapping 使用 ${activeYear} 年工作表`,`已识别 ${sheets.length} 个历史结构工作表，本次仅导入最新年度的 ${chosen.length} 个工作表。`);
       for(const s of chosen){ const entity=entityOf(s.name); if(!entity){ addCheck('warn',`跳过 Mapping 工作表：${s.name}`,'工作表名称未包含“幻电”或“芜湖/享游”，无法判断主体。'); continue; } entities.push(entity);
-        const h=s.header.index;
+        const h=s.header.index, requestDateColumn=h['申请开票时间']; let requestBatch='';
         for(let i=s.header.row+1;i<s.rows.length;i++){ const row=s.rows[i], amount=toNumber(row[h['开票金额']]); const company=displayText(row[h['公司名称']]), channel=displayText(row[h['渠道']]), period=periodStr(row[h['账期']]);
+          const rawRequestDate=requestDateColumn===undefined?null:row[requestDateColumn]; if(rawRequestDate!==null&&rawRequestDate!==undefined&&displayText(rawRequestDate)) requestBatch=dateStr(rawRequestDate);
           if(!company&&!channel&&!Number.isFinite(amount)) continue;
           if(!company||!channel||!period||!Number.isFinite(amount)){ addCheck('warn',`${fileName} · ${s.name} 第 ${i+1} 行未导入`,'渠道、公司名称、开票金额或账期为空/异常。'); continue; }
-          state.mapping.push({id:uid('m',state.mapping.length),entity,channel,channelKey:normalizeText(channel),company,companyKey:normalizeText(company),amount:round2(amount),period,periodKey:normalizeText(period),file:fileName,sheet:s.name,row:i+1,sheetYear:sheetYear(s.name)});
+          state.mapping.push({id:uid('m',state.mapping.length),entity,channel,channelKey:normalizeText(channel),company,companyKey:normalizeText(company),amount:round2(amount),period,periodKey:normalizeText(period),requestBatch,batchKey:normalizeText(requestBatch),file:fileName,sheet:s.name,row:i+1,sheetYear:sheetYear(s.name)});
         }
       }
       return entities;
@@ -455,7 +456,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function groupsForMonth(){
       const rows=activeMappingRows();
       const map=new Map();
-      for(const r of rows){ const key=[r.entity,r.channelKey,r.companyKey,r.periodKey].join('|'); if(!map.has(key)) map.set(key,{id:`g${map.size+1}`,key,entity:r.entity,channel:r.channel,channelKey:r.channelKey,company:r.company,companyKey:r.companyKey,period:r.period,amount:0,items:[]}); const g=map.get(key); g.amount=round2(g.amount+r.amount); g.items.push(r); }
+      for(const r of rows){ const key=[r.entity,r.channelKey,r.companyKey,r.periodKey,r.batchKey||''].join('|'); if(!map.has(key)) map.set(key,{id:`g${map.size+1}`,key,entity:r.entity,channel:r.channel,channelKey:r.channelKey,company:r.company,companyKey:r.companyKey,period:r.period,requestBatch:r.requestBatch||'',amount:0,items:[]}); const g=map.get(key); g.amount=round2(g.amount+r.amount); g.items.push(r); }
       return [...map.values()];
     }
     function addCheckOnce(level,msg,detail){ if(!state.checks.some(c=>c.msg===msg)) addCheck(level,msg,detail); }
