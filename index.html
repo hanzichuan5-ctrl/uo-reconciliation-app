@@ -526,8 +526,22 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       if(x.reason) return x.reason;
       const groups=groupsForMonth().filter(g=>g.entity===x.entity&&g.companyKey===x.companyKey);
       if(!groups.length) return '当月开票申请中没有该公司的申请';
+      const invoiceCents=cents(x.amount), near=[];
+      for(let i=0;i<groups.length;i++){
+        const g=groups[i];
+        if(cents(g.amount)===invoiceCents) return `金额与申请（账期 ${g.period}）¥ ${money(x.amount)} 一致，该申请已由其他发票匹配完成，本张未被使用`;
+        near.push({amount:g.amount,label:`申请（账期 ${g.period}）¥ ${money(g.amount)}`});
+        for(let j=i+1;j<groups.length;j++){
+          const combined=round2(g.amount+groups[j].amount);
+          if(cents(combined)===invoiceCents) return `金额与两笔申请合计（账期 ${g.period}+${groups[j].period}）¥ ${money(x.amount)} 一致，已由其他发票匹配完成，本张未被使用`;
+          near.push({amount:combined,label:`两笔申请合计（账期 ${g.period}+${groups[j].period}）¥ ${money(combined)}`});
+        }
+      }
       const results=state.results.filter(r=>r.entity===x.entity&&r.companyKey===x.companyKey);
       if(results.length&&results.every(r=>finalSide(r,'invoice').status==='已开票')) return '该公司的申请已由其他发票匹配完成，本张未被使用';
+      let best=null;
+      for(const item of near){ const d=Math.abs(cents(item.amount)-invoiceCents); if(!best||d<best.d) best={d,item}; }
+      if(best) return `发票 ¥ ${money(x.amount)} 与所有申请金额不一致（最接近 ${best.item.label}，差 ¥ ${money(round2(Math.abs(x.amount-best.item.amount)))}）`;
       return '有对应申请，但发票金额与申请金额不一致';
     }
     function indieRuleSharedWithUo(rule){
