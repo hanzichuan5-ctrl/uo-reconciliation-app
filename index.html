@@ -53,6 +53,19 @@
     @media(max-width:760px){.piplup-mascot{display:none}}
     @media(max-width:560px){main{width:calc(100% - 24px);padding:16px 0 38px}.topbar{padding:22px 0}.top-inner{width:calc(100% - 24px)}.topbar h1{font-size:23px}.primary-nav{padding:8px}.primary-nav-item,.app-shell.nav-collapsed .primary-nav-item{padding:9px}.nav-copy strong{font-size:12px}.nav-count,.app-shell.nav-collapsed .nav-count{display:none}.module-heading{display:block}.module-heading .btn{margin-top:10px}.kpis,.mapping-intro{grid-template-columns:1fr}.upload-panel{padding:16px}.tabs{overflow:auto}.month-wrap{order:3}.mapping-form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}}
     @media(prefers-reduced-motion:reduce){.piplup-mascot{animation:none}.piplup-mascot img{transition:none}}
+    .operator-wrap input{border:0;background:transparent;color:#fff;font-weight:700;outline:none;border-bottom:1px solid rgba(255,255,255,.32);min-width:96px;padding:4px 2px}.operator-wrap input::placeholder{color:#9fb6cf;font-weight:600}.operator-wrap input:focus{border-bottom-color:#fff}
+    .combo-overlay{position:fixed;inset:0;background:rgba(15,30,55,.55);backdrop-filter:blur(4px);z-index:30;display:grid;place-items:center;padding:24px;overflow:auto}.combo-overlay[hidden]{display:none}
+    .combo-panel{width:min(1280px,calc(100% - 32px));max-height:calc(100vh - 48px);background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(15,30,55,.24);display:flex;flex-direction:column;overflow:hidden}
+    .combo-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:#f7f9fc}.combo-head h3{margin:0 0 3px;font-size:17px}.combo-head p{margin:0;color:var(--muted);font-size:12px}
+    .combo-grid{display:grid;grid-template-columns:1fr 1.35fr;gap:14px;padding:14px 22px;overflow:auto;min-height:280px}
+    .combo-col{display:flex;flex-direction:column;min-height:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fbfcfd}.combo-col h4{margin:0;padding:10px 14px;font-size:13px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}
+    .combo-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--line);background:#fff}.combo-toolbar select,.combo-toolbar input{border:1px solid var(--line-strong);background:#fff;border-radius:7px;padding:6px 8px;outline:none;min-width:96px}.combo-toolbar .grow{flex:1;min-width:140px}
+    .combo-list{flex:1;overflow:auto;min-height:160px;max-height:420px}.combo-item{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:start;padding:9px 14px;border-bottom:1px solid #edf0f4;cursor:default}.combo-item:hover{background:#f7f9ff}.combo-item.disabled{opacity:.5;background:#f7f9fb}.combo-item.disabled:hover{background:#f7f9fb}.combo-item .meta{font-size:12px;color:var(--muted)}.combo-item .amt{font-weight:700;font-variant-numeric:tabular-nums}.combo-item .pill{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--slate-bg);color:var(--slate);font-weight:700}.combo-item .pill.risk{background:var(--red-bg);color:var(--red)}.combo-item .pill.ok{background:var(--green-bg);color:var(--green)}
+    .combo-sum{padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:#fff;font-size:13px}.combo-sum strong{font-size:15px;font-variant-numeric:tabular-nums}
+    .combo-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--line);background:#f7f9fc;flex-wrap:wrap}.combo-delta{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}.combo-delta strong{font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}.combo-delta small{color:var(--amber);font-weight:650}.combo-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .combo-conflict{margin:0 22px 14px;padding:10px 14px;border-radius:9px;background:var(--red-bg);color:var(--red);font-size:12px;line-height:1.5;display:flex;flex-direction:column;gap:4px}.combo-conflict[hidden]{display:none}
+    .chk-actions{display:flex;gap:6px;flex-wrap:wrap}.chk-row td{vertical-align:middle}.chk-row.disabled{opacity:.6}
+    @media(max-width:980px){.combo-grid{grid-template-columns:1fr}.combo-panel{max-height:none}}
   </style>
 </head>
 <body>
@@ -61,6 +74,7 @@
       <div><div class="eyebrow">UO FINANCE CONTROL</div><h1 id="pageTitle">回款与开票确认</h1><p id="pageLead">上传当月 Excel 后在浏览器本地完成匹配、复核与导出。文件不会发送到网络，也不会跨月保存。</p></div>
       <div class="top-actions">
         <div class="month-wrap monthly-action"><label for="monthSelect">核对月份</label><select id="monthSelect" disabled><option>—</option></select></div>
+        <div class="month-wrap monthly-action operator-wrap"><label for="operatorInput">本地确认人</label><input id="operatorInput" type="text" placeholder="姓名" autocomplete="off"></div>
         <button id="resetBtn" class="btn ghost monthly-action" disabled>重新导入</button>
         <button id="exportBtn" class="btn primary monthly-action" disabled>导出复核结果</button>
       </div>
@@ -72,6 +86,7 @@
         <div class="primary-nav-head"><div class="primary-nav-title">工作区</div><button id="navCollapseBtn" class="nav-collapse" type="button" aria-expanded="true" aria-label="收起工作区" title="收起工作区"><span aria-hidden="true">‹</span></button></div>
         <nav class="primary-nav-list">
           <button class="primary-nav-item active" data-module="reconcile" aria-label="开票回款核对" title="开票回款核对"><span class="nav-icon" aria-hidden="true">核</span><span class="nav-copy"><strong>开票回款核对</strong><small>申请、发票与银行流水核对</small></span><span id="navCountReconcile" class="nav-count">—</span></button>
+          <button class="primary-nav-item" data-module="checklist" aria-label="系统勾选清单" title="系统勾选清单"><span class="nav-icon" aria-hidden="true">勾</span><span class="nav-copy"><strong>系统勾选清单</strong><small>记录 UO 系统是否已勾选</small></span><span id="navCountChecklist" class="nav-count">—</span></button>
           <button class="primary-nav-item" data-module="indie" aria-label="独立游戏回款" title="独立游戏回款"><span class="nav-icon" aria-hidden="true">游</span><span class="nav-copy"><strong>独立游戏回款</strong><small>独立于开票申请的银行回款</small></span><span id="navCountIndie" class="nav-count">—</span></button>
           <button class="primary-nav-item" data-module="mapping" aria-label="Mapping 管理" title="Mapping 管理"><span class="nav-icon" aria-hidden="true">M</span><span class="nav-copy"><strong>Mapping 管理</strong><small>UO 渠道对照与独立游戏规则</small></span><span id="navCountMapping" class="nav-count">44</span></button>
         </nav>
@@ -127,6 +142,32 @@
           </section>
         </section>
 
+        <section id="module-checklist" class="module-view">
+          <div class="module-heading"><div><h2>系统勾选清单</h2><p>金额匹配完成后，去 UO 系统勾选对应明细，回到这里标记状态。开票与回款独立追踪，互不影响。</p></div></div>
+          <div id="checklistEmpty" class="panel module-empty"><strong>暂无可勾选的业务明细</strong><span>在「开票回款核对」中完成组合匹配后，匹配组中的业务明细会出现在这里。</span></div>
+          <section id="checklistContent" class="panel work-panel" hidden>
+            <div class="indie-summary" id="checklistSummary"></div>
+            <nav class="tabs" aria-label="系统勾选分类">
+              <button class="tab active" type="button" data-checklist-tab="invoice-pending">开票待勾选 <b id="countChkInvPending">0</b></button>
+              <button class="tab" type="button" data-checklist-tab="bank-pending">回款待勾选 <b id="countChkBankPending">0</b></button>
+              <button class="tab" type="button" data-checklist-tab="checked">已勾选 <b id="countChkChecked">0</b></button>
+              <button class="tab" type="button" data-checklist-tab="exception">异常/不可勾选 <b id="countChkException">0</b></button>
+            </nav>
+            <div class="checklist-toolbar sub-toolbar">
+              <input type="search" id="filterChecklistSearch" class="grow" placeholder="搜索主体、渠道、公司或月份">
+              <button class="btn blue small" type="button" id="chkMarkInvoiceBtn" data-side="invoice">批量标记开票已勾选</button>
+              <button class="btn blue small" type="button" id="chkMarkBankBtn" data-side="bank">批量标记回款已勾选</button>
+              <button class="btn small" type="button" id="chkUnmarkBtn">批量撤销勾选</button>
+              <button class="btn small" type="button" id="chkMarkNoneBtn">标记为无需勾选</button>
+              <span id="checklistResultCount" class="result-count"></span>
+            </div>
+            <div id="tab-checklist-invoice-pending" class="tabview active"><div class="table-wrap"><table class="data-table"><thead><tr><th><input type="checkbox" id="chkSelectAll" aria-label="全选当前页"></th><th>主体</th><th>收入月份</th><th>渠道</th><th class="company">公司</th><th>游戏</th><th style="text-align:right">应匹配金额</th><th>匹配组</th><th>开票状态</th><th>开票确认人/时间</th><th>操作</th></tr></thead><tbody id="checklistInvPendingBody"></tbody></table></div></div>
+            <div id="tab-checklist-bank-pending" class="tabview"><div class="table-wrap"><table class="data-table"><thead><tr><th><input type="checkbox" class="chk-select-all" aria-label="全选当前页"></th><th>主体</th><th>收入月份</th><th>渠道</th><th class="company">公司</th><th>游戏</th><th style="text-align:right">应匹配金额</th><th>匹配组</th><th>回款状态</th><th>回款确认人/时间</th><th>操作</th></tr></thead><tbody id="checklistBankPendingBody"></tbody></table></div></div>
+            <div id="tab-checklist-checked" class="tabview"><div class="table-wrap"><table class="data-table"><thead><tr><th><input type="checkbox" class="chk-select-all" aria-label="全选当前页"></th><th>类型</th><th>主体</th><th>收入月份</th><th>渠道</th><th class="company">公司</th><th>游戏</th><th style="text-align:right">应匹配金额</th><th>匹配组</th><th>确认人</th><th>确认时间</th><th>操作</th></tr></thead><tbody id="checklistCheckedBody"></tbody></table></div></div>
+            <div id="tab-checklist-exception" class="tabview"><div class="table-wrap"><table class="data-table"><thead><tr><th><input type="checkbox" class="chk-select-all" aria-label="全选当前页"></th><th>类型</th><th>主体</th><th>收入月份</th><th>渠道</th><th class="company">公司</th><th>游戏</th><th style="text-align:right">应匹配金额</th><th>匹配组</th><th>异常原因</th><th>操作</th></tr></thead><tbody id="checklistExceptionBody"></tbody></table></div></div>
+          </section>
+        </section>
+
         <section id="module-indie" class="module-view">
           <div class="module-heading"><div><h2>独立游戏回款</h2><p>以银行流水为起点，识别不需要关联开票申请的独立游戏回款。</p></div></div>
           <div id="indieEmpty" class="panel module-empty"><strong>请先导入当月银行流水</strong><span>在“开票回款核对”完成月度文件导入后，这里会自动识别独立游戏回款。</span></div>
@@ -157,6 +198,7 @@
               <div class="field"><label for="uoMappingEntity">主体</label><select id="uoMappingEntity" required><option>上海幻电</option><option>芜湖享游</option></select></div>
               <div class="field"><label for="uoMappingInvoice">开票要求</label><select id="uoMappingInvoice" required><option value="normal">正常开票</option><option value="none">无需开票</option></select></div>
               <div class="field wide"><label for="uoMappingCompany">开票公司</label><input id="uoMappingCompany" required placeholder="开票申请中的标准公司名称"></div>
+              <div class="field"><label for="uoMappingSettlement">共享结算组</label><input id="uoMappingSettlement" placeholder="例如：华为系（同组渠道可跨渠道候选）"></div>
               <div class="field"><label for="uoMappingNote">规则说明</label><input id="uoMappingNote" placeholder="例如：与华为、鸿蒙共用开票公司"></div>
             </div>
             <div class="mapping-form-foot"><button id="cancelUoMappingForm" class="btn" type="button">取消</button><button class="btn blue" type="submit">保存规则</button></div>
@@ -179,7 +221,7 @@
               <button class="tab" type="button" data-mapping-tab="indie">独立游戏规则 <b id="countIndieMapping">0</b></button>
             </nav>
             <div id="tab-mapping-uo" class="tabview active">
-              <div class="table-wrap" style="max-height:690px"><table class="data-table"><thead><tr><th>状态</th><th>渠道</th><th>主体</th><th class="company">开票公司</th><th>开票要求</th><th>对照状态</th><th>当年申请</th><th style="text-align:right">当年金额</th><th>操作</th></tr></thead><tbody id="uoMappingBody"></tbody></table></div>
+              <div class="table-wrap" style="max-height:690px"><table class="data-table"><thead><tr><th>状态</th><th>渠道</th><th>主体</th><th class="company">开票公司</th><th>结算组</th><th>开票要求</th><th>对照状态</th><th>当年申请</th><th style="text-align:right">当年金额</th><th>操作</th></tr></thead><tbody id="uoMappingBody"></tbody></table></div>
             </div>
             <div id="tab-mapping-indie" class="tabview">
               <div class="table-wrap" style="max-height:690px"><table class="data-table"><thead><tr><th>状态</th><th>渠道</th><th>主体</th><th>币种</th><th class="company">银行对方名称基准</th><th>严格归一化名称</th><th>UO 共用公司</th><th>本月命中</th><th style="text-align:right">本月金额</th><th>操作</th></tr></thead><tbody id="mappingBody"></tbody></table></div>
@@ -189,6 +231,48 @@
       </div>
     </div>
   </main>
+
+  <div id="comboOverlay" class="combo-overlay" hidden>
+    <div class="combo-panel" role="dialog" aria-modal="true" aria-labelledby="comboTitle">
+      <header class="combo-head">
+        <div><h3 id="comboTitle">组合匹配</h3><p id="comboSub">勾选来源单据与业务明细，确认后生成匹配组。</p></div>
+        <button id="comboClose" class="btn small" type="button">关闭</button>
+      </header>
+      <div class="combo-grid">
+        <section class="combo-col">
+          <h4>来源单据 <span id="comboSourceType" class="badge muted">—</span></h4>
+          <div class="combo-toolbar">
+            <label class="enter-toggle"><input type="checkbox" id="comboShowOccupied"> 显示已被其他匹配组占用的单据</label>
+          </div>
+          <div class="combo-list" id="comboSourceList"></div>
+          <div class="combo-sum"><span>来源合计</span><strong id="comboSourceTotal">¥ 0.00</strong></div>
+        </section>
+        <section class="combo-col">
+          <h4>业务明细候选 <span id="comboPoolCount" class="badge muted">0</span></h4>
+          <div class="combo-toolbar">
+            <select id="comboFilterMonth"><option value="">全部收入月份</option></select>
+            <select id="comboFilterChannel"><option value="">全部渠道</option></select>
+            <select id="comboFilterGame"><option value="">全部游戏</option></select>
+            <input id="comboFilterSearch" type="search" placeholder="搜索公司/月份" class="grow">
+            <label class="enter-toggle"><input type="checkbox" id="comboOnlyOpen" checked> 仅未闭环</label>
+            <label class="enter-toggle"><input type="checkbox" id="comboAllowFuture"> 允许晚于单据月份</label>
+          </div>
+          <div class="combo-list" id="comboDetailList"></div>
+          <div class="combo-sum"><span>已选业务合计</span><strong id="comboDetailTotal">¥ 0.00</strong></div>
+        </section>
+      </div>
+      <footer class="combo-foot">
+        <div class="combo-delta"><span>差额</span><strong id="comboDelta">¥ 0.00</strong><small id="comboDeltaHint"></small></div>
+        <div class="combo-actions">
+          <button id="comboDraft" class="btn" type="button">保存为部分匹配</button>
+          <button id="comboConfirm" class="btn blue" type="button" disabled>确认匹配</button>
+          <button id="comboCancel" class="btn ghost" type="button">取消</button>
+        </div>
+      </footer>
+      <div id="comboConflict" class="combo-conflict" hidden></div>
+    </div>
+  </div>
+
   <button id="piplupMascot" class="piplup-mascot" type="button" aria-pressed="false" aria-label="暂停波加曼动效" title="点击暂停或继续波加曼动效"><img src="assets/piplup.png" alt="得意的波加曼"></button>
   <div id="toast" class="toast" role="status"></div>
 
@@ -280,15 +364,26 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     const INDIE_PENDING_STATUSES = ['共享公司待复核','模糊匹配候选','规则冲突'];
     const PAGE_META = {
       reconcile:{title:'回款与开票确认',lead:'上传当月 Excel 后在浏览器本地完成匹配、复核与导出。文件不会发送到网络，也不会跨月保存。'},
+      checklist:{title:'系统勾选清单',lead:'记录金额匹配完成后是否已在 UO 系统勾选。开票与回款独立追踪，互不影响。'},
       indie:{title:'独立游戏回款',lead:'以银行流水为起点，识别不需要关联开票申请的独立游戏回款。'},
       mapping:{title:'Mapping 管理',lead:'长期维护 UO 渠道与开票公司对照，以及独立游戏银行名称识别规则。不受核对月份影响。'}
     };
     const NAV_STORAGE_KEY='uo-primary-nav-v1';
     const ENTRY_STORAGE_KEY='uo-entry-status-v1';
+    const OPERATOR_STORAGE_KEY='uo-operator-v1';
+    const MATCHGROUP_STORAGE_KEY='uo-match-groups-v1';
+    const CHECKSTATUS_STORAGE_KEY='uo-check-status-v1';
+    const SETTLEMENT_GROUPS = { '华为':'华为系', '鸿蒙':'华为系' };
+    const MATCH_STATUS = { UNMATCHED:'未匹配', PARTIAL:'部分匹配', MATCHED:'已匹配', REVIEW:'差异待复核', CONFLICT:'冲突待复核', DRAFT:'草稿' };
+    const CHECK_STATUS = { PENDING:'待勾选', CHECKED:'已勾选', NONE:'无需勾选' };
+    const SETTLEMENT_DEFAULT = rule => SETTLEMENT_GROUPS[rule.channel] || '';
     const initialNavCollapsed=(()=>{try{return localStorage.getItem(NAV_STORAGE_KEY)!=='expanded'}catch{return true}})();
-    const state = { files:[], mapping:[], banks:[], invoices:[], indieMatches:[], months:[], month:'', results:[], checks:[], fileReports:[], overrides:{}, expanded:new Set(), currentTab:'results', currentModule:'reconcile', mappingTab:'uo', mappingFilter:'', mappingUnknown:[], navCollapsed:initialNavCollapsed, entryStatus:loadEntryStatus(), showEntered:false };
+    const state = { files:[], mapping:[], banks:[], invoices:[], indieMatches:[], months:[], month:'', results:[], checks:[], fileReports:[], overrides:{}, expanded:new Set(), currentTab:'results', currentModule:'reconcile', mappingTab:'uo', mappingFilter:'', mappingUnknown:[], navCollapsed:initialNavCollapsed, entryStatus:loadEntryStatus(), showEntered:false, matchGroups:loadMatchGroups(), checkStatus:loadCheckStatus(), operator:loadOperator(), comboDraft:null, comboFilter:{month:'',channel:'',game:'',q:'',onlyOpen:true,allowFuture:false,showOccupied:false}, checklistTab:'invoice-pending', dirty:false };
     const $ = s => document.querySelector(s);
-    const els = { fileInput:$('#fileInput'),dropzone:$('#dropzone'),progress:$('#progress'),fileGrid:$('#fileGrid'),uploadPanel:$('#uploadPanel'),importStatus:$('#importStatus'),toggleUpload:$('#toggleUploadDetails'),workspace:$('#workspace'),month:$('#monthSelect'),reset:$('#resetBtn'),export:$('#exportBtn'),resultBody:$('#resultBody'),bankBody:$('#bankBody'),invoiceBody:$('#invoiceBody'),indieBody:$('#indieBody'),indieSummary:$('#indieSummary'),indieEmpty:$('#indieEmpty'),indieContent:$('#indieContent'),mappingBody:$('#mappingBody'),uoMappingBody:$('#uoMappingBody'),mappingIntro:$('#mappingIntro'),mappingForm:$('#mappingForm'),uoMappingForm:$('#uoMappingForm'),checkList:$('#checkList'),toast:$('#toast') };
+    const els = { fileInput:$('#fileInput'),dropzone:$('#dropzone'),progress:$('#progress'),fileGrid:$('#fileGrid'),uploadPanel:$('#uploadPanel'),importStatus:$('#importStatus'),toggleUpload:$('#toggleUploadDetails'),workspace:$('#workspace'),month:$('#monthSelect'),operator:$('#operatorInput'),reset:$('#resetBtn'),export:$('#exportBtn'),resultBody:$('#resultBody'),bankBody:$('#bankBody'),invoiceBody:$('#invoiceBody'),indieBody:$('#indieBody'),indieSummary:$('#indieSummary'),indieEmpty:$('#indieEmpty'),indieContent:$('#indieContent'),mappingBody:$('#mappingBody'),uoMappingBody:$('#uoMappingBody'),mappingIntro:$('#mappingIntro'),mappingForm:$('#mappingForm'),uoMappingForm:$('#uoMappingForm'),checkList:$('#checkList'),toast:$('#toast'),
+      comboOverlay:$('#comboOverlay'),comboClose:$('#comboClose'),comboCancel:$('#comboCancel'),comboConfirm:$('#comboConfirm'),comboDraft:$('#comboDraft'),comboTitle:$('#comboTitle'),comboSub:$('#comboSub'),comboSourceType:$('#comboSourceType'),comboSourceList:$('#comboSourceList'),comboSourceTotal:$('#comboSourceTotal'),comboDetailList:$('#comboDetailList'),comboDetailTotal:$('#comboDetailTotal'),comboPoolCount:$('#comboPoolCount'),comboDelta:$('#comboDelta'),comboDeltaHint:$('#comboDeltaHint'),comboConflict:$('#comboConflict'),
+      comboFilterMonth:$('#comboFilterMonth'),comboFilterChannel:$('#comboFilterChannel'),comboFilterGame:$('#comboFilterGame'),comboFilterSearch:$('#comboFilterSearch'),comboOnlyOpen:$('#comboOnlyOpen'),comboAllowFuture:$('#comboAllowFuture'),comboShowOccupied:$('#comboShowOccupied'),
+      checklistEmpty:$('#checklistEmpty'),checklistContent:$('#checklistContent'),checklistSummary:$('#checklistSummary'),chkInvPendingBody:$('#checklistInvPendingBody'),chkBankPendingBody:$('#checklistBankPendingBody'),chkCheckedBody:$('#checklistCheckedBody'),chkExceptionBody:$('#checklistExceptionBody'),countChkInvPending:$('#countChkInvPending'),countChkBankPending:$('#countChkBankPending'),countChkChecked:$('#countChkChecked'),countChkException:$('#countChkException'),filterChecklistSearch:$('#filterChecklistSearch'),checklistResultCount:$('#checklistResultCount') };
     const money = n => Number(n||0).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
     const esc = v => String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
     const round2 = n => Math.round((Number(n)+Number.EPSILON)*100)/100;
@@ -304,7 +399,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     const RULE_STORAGE_KEY='uo-indie-mapping-rules-v1';
     const UO_RULE_STORAGE_KEY='uo-channel-mapping-rules-v1';
     function hydrateRule(rule,index=0){ const aliases=Array.isArray(rule.aliases)?rule.aliases:[]; return {...rule,id:rule.id||`indie-rule-${index+1}`,aliases,months:Array.isArray(rule.months)?rule.months:[],active:rule.active!==false,strictKey:strictCompanyKey(rule.company),coreKey:coreCompanyKey(rule.company),aliasKeys:aliases.map(strictCompanyKey)}; }
-    function hydrateUoRule(rule,index=0){ return {...rule,id:rule.id||`uo-rule-${index+1}`,note:rule.note||'',invoicePolicy:rule.invoicePolicy==='none'?'none':'normal',active:rule.active!==false,channelKey:normalizeText(rule.channel),companyKey:normalizeText(rule.company),strictKey:strictCompanyKey(rule.company)}; }
+    function hydrateUoRule(rule,index=0){ return {...rule,id:rule.id||`uo-rule-${index+1}`,note:rule.note||'',settlementGroup:rule.settlementGroup||SETTLEMENT_GROUPS[rule.channel]||'',invoicePolicy:rule.invoicePolicy==='none'?'none':'normal',active:rule.active!==false,channelKey:normalizeText(rule.channel),companyKey:normalizeText(rule.company),strictKey:strictCompanyKey(rule.company)}; }
     function loadIndieRules(){ try{const saved=JSON.parse(localStorage.getItem(RULE_STORAGE_KEY)||'null');if(Array.isArray(saved)&&saved.length)return saved.map(hydrateRule)}catch(err){console.warn('Mapping rules could not be loaded',err)} return INDIE_RULE_SEEDS.map(hydrateRule); }
     function saveIndieRules(){ try{localStorage.setItem(RULE_STORAGE_KEY,JSON.stringify(INDIE_RULES.map(({strictKey,coreKey,aliasKeys,...rule})=>rule)))}catch(err){toast('Mapping 规则无法写入本地存储',true)} }
     function migrateUoRule(rule){ const next={...rule}; const channel=normalizeText(next.channel),company=normalizeText(next.company); if(channel==='荣耀'&&company===normalizeText('华为软件技术有限公司')){next.company='深圳荣耀软件技术有限公司';if(!next.note||next.note==='无需开票；与华为、鸿蒙共用开票公司')next.note='无需开票'} if(channel==='华为'&&next.note==='与鸿蒙、荣耀共用开票公司')next.note='与鸿蒙共用开票公司'; if(channel==='鸿蒙'&&next.note==='与华为、荣耀共用开票公司')next.note='与华为共用开票公司'; return next; }
@@ -314,6 +409,20 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function saveEntryStatus(){ try{localStorage.setItem(ENTRY_STORAGE_KEY,JSON.stringify(state.entryStatus))}catch(err){toast('录入状态无法写入本地存储',true)} }
     const isEntered = x => !!state.entryStatus[x.stableKey];
     function toggleEntered(x){ if(state.entryStatus[x.stableKey]) delete state.entryStatus[x.stableKey]; else state.entryStatus[x.stableKey]=1; saveEntryStatus(); }
+    function loadOperator(){ try{return String(localStorage.getItem(OPERATOR_STORAGE_KEY)||'')}catch{return ''} }
+    function saveOperator(){ try{localStorage.setItem(OPERATOR_STORAGE_KEY,state.operator||'')}catch{} }
+    function currentOperator(){ return (state.operator||'').trim()||'未署名' }
+    function detailFingerprint(detail){
+      const parts=[detail.entity,detail.channelKey,detail.companyKey,detail.periodKey,String(detail.amount||''),detail.requestBatch||'',detail.sheet||'',detail.row||''];
+      return `d|${parts.join('|')}`;
+    }
+    function loadMatchGroups(){ try{return JSON.parse(localStorage.getItem(MATCHGROUP_STORAGE_KEY)||'[]')||[]}catch{return[]} }
+    function saveMatchGroups(){ try{localStorage.setItem(MATCHGROUP_STORAGE_KEY,JSON.stringify(state.matchGroups.map(g=>({...g}))))}catch(err){toast('匹配组无法写入本地存储',true)} }
+    function loadCheckStatus(){ try{return JSON.parse(localStorage.getItem(CHECKSTATUS_STORAGE_KEY)||'{}')||{}}catch{return{}} }
+    function saveCheckStatus(){ try{localStorage.setItem(CHECKSTATUS_STORAGE_KEY,JSON.stringify(state.checkStatus))}catch(err){toast('勾选状态无法写入本地存储',true)} }
+    function markDirty(){ state.dirty=true }
+    function clearDirty(){ state.dirty=false }
+    function nowTimestamp(){const d=new Date(),two=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${two(d.getMonth()+1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`}
     let INDIE_RULES = loadIndieRules();
     let UO_RULES = loadUoRules();
     const toNumber = v => { if(typeof v==='number') return Number.isFinite(v)?v:NaN; const x=String(v??'').replace(/[,，¥￥\s]/g,''); return x===''?NaN:Number(x); };
@@ -371,7 +480,23 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const monthCounts={}; [...state.banks,...state.invoices].forEach(r=>{if(r.month) monthCounts[r.month]=(monthCounts[r.month]||0)+1});
       state.months=Object.keys(monthCounts).sort().reverse(); state.month=state.months[0]||'';
       auditImportedMapping();
+      validatePersistedMatchGroups();
       renderFileGrid(); setupMonths(); reconcile(); renderAll();
+    }
+    function validatePersistedMatchGroups(){
+      if(!state.matchGroups.length) return;
+      const currentSourceKeys=new Set([...state.banks,...state.invoices].map(r=>r.stableKey));
+      const currentDetailFps=new Set(state.mapping.map(detailFingerprint));
+      const orphanGroups=[], orphanDetails=[];
+      for(const g of state.matchGroups){
+        const missingSources=g.sourceKeys.filter(k=>!currentSourceKeys.has(k));
+        const missingDetails=g.detailFps.filter(fp=>!currentDetailFps.has(fp));
+        if(missingSources.length||missingDetails.length){ orphanGroups.push({g,missingSources,missingDetails}); if(missingDetails.length) orphanDetails.push(...missingDetails); }
+      }
+      if(orphanGroups.length){
+        addCheck('warn','本地匹配组引用了当前导入未包含的单据/明细',`共 ${orphanGroups.length} 个匹配组存在悬空引用（来源 ${orphanGroups.reduce((n,x)=>n+x.missingSources.length,0)} 条、业务明细 ${orphanDetails.length} 条），将在导出时标记为“悬空”，但不会自动删除；如需清理请到「系统勾选清单」撤销对应匹配组。`);
+        for(const x of orphanGroups){ x.g._orphan=true; x.g._orphanSources=x.missingSources; x.g._orphanDetails=x.missingDetails; }
+      }
     }
     function parseMapping(fileName,sheets){
       const entities=[];
@@ -664,7 +789,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       $('#countUoMapping').textContent=stats.uoActive.length;
       $('#countIndieMapping').textContent=stats.indieActive.length;
       const uoSorted=[...UO_RULES].filter(isUoRuleVisible).sort((a,b)=>a.entity.localeCompare(b.entity,'zh')||a.channel.localeCompare(b.channel,'zh')||a.company.localeCompare(b.company,'zh'));
-      els.uoMappingBody.innerHTML=uoSorted.length?uoSorted.map(rule=>{const audit=uoRuleAudit(rule),invoiceLabel=rule.invoicePolicy==='none'?'无需开票':'正常开票';return `<tr><td><span class="badge ${rule.active!==false?'ok':'muted'}">${rule.active!==false?'启用':'已停用'}</span></td><td><strong>${esc(rule.channel)}</strong></td><td class="nowrap">${esc(rule.entity)}</td><td class="company">${esc(rule.company)}${rule.note?`<div class="muted">${esc(rule.note)}</div>`:''}</td><td>${rule.invoicePolicy==='none'?`<span class="badge muted">${invoiceLabel}</span>`:invoiceLabel}</td><td><span class="badge ${audit.cls}">${audit.label}</span></td><td>${state.mapping.length?`${audit.rows.length} 笔`:'—'}</td><td class="num">${state.mapping.length?money(sum(audit.rows.map(r=>r.amount))):'—'}</td><td><div class="rule-actions"><button class="rule-action" type="button" data-uo-action="edit" data-rule-id="${esc(rule.id)}">编辑</button><button class="rule-action ${rule.active!==false?'danger':''}" type="button" data-uo-action="toggle" data-rule-id="${esc(rule.id)}">${rule.active!==false?'停用':'启用'}</button></div></td></tr>`}).join(''):`<tr><td colspan="9"><div class="empty"><strong>${state.mappingFilter==='pending'?'没有待确认的 UO 对照':state.mappingFilter==='disabled'?'没有已停用的 UO 对照':'还没有 UO 渠道对照'}</strong>${state.mappingFilter?'点击顶部卡片可回到全部规则。':'点击右上角新增 UO 规则。'}</div></td></tr>`;
+      els.uoMappingBody.innerHTML=uoSorted.length?uoSorted.map(rule=>{const audit=uoRuleAudit(rule),invoiceLabel=rule.invoicePolicy==='none'?'无需开票':'正常开票';return `<tr><td><span class="badge ${rule.active!==false?'ok':'muted'}">${rule.active!==false?'启用':'已停用'}</span></td><td><strong>${esc(rule.channel)}</strong></td><td class="nowrap">${esc(rule.entity)}</td><td class="company">${esc(rule.company)}${rule.note?`<div class="muted">${esc(rule.note)}</div>`:''}</td><td>${rule.settlementGroup?`<span class="badge wait">${esc(rule.settlementGroup)}</span>`:'—'}</td><td>${rule.invoicePolicy==='none'?`<span class="badge muted">${invoiceLabel}</span>`:invoiceLabel}</td><td><span class="badge ${audit.cls}">${audit.label}</span></td><td>${state.mapping.length?`${audit.rows.length} 笔`:'—'}</td><td class="num">${state.mapping.length?money(sum(audit.rows.map(r=>r.amount))):'—'}</td><td><div class="rule-actions"><button class="rule-action" type="button" data-uo-action="edit" data-rule-id="${esc(rule.id)}">编辑</button><button class="rule-action ${rule.active!==false?'danger':''}" type="button" data-uo-action="toggle" data-rule-id="${esc(rule.id)}">${rule.active!==false?'停用':'启用'}</button></div></td></tr>`}).join(''):`<tr><td colspan="10"><div class="empty"><strong>${state.mappingFilter==='pending'?'没有待确认的 UO 对照':state.mappingFilter==='disabled'?'没有已停用的 UO 对照':'还没有 UO 渠道对照'}</strong>${state.mappingFilter?'点击顶部卡片可回到全部规则。':'点击右上角新增 UO 规则。'}</div></td></tr>`;
       const indieRules=[...INDIE_RULES].filter(isIndieRuleVisible);
       els.mappingBody.innerHTML=indieRules.length?indieRules.map(rule=>{const hits=state.indieMatches.filter(r=>r.ruleId===rule.id),shared=indieRuleSharedWithUo(rule);return `<tr><td><span class="badge ${rule.active!==false?'ok':'muted'}">${rule.active!==false?'启用':'已停用'}</span></td><td><strong>${esc(rule.channel)}</strong></td><td class="nowrap">${esc(rule.entity)}</td><td>${esc(rule.currency)}</td><td class="company">${esc(rule.company)}${rule.aliases.length?`<div class="muted">别名：${esc(rule.aliases.join(' / '))}</div>`:''}</td><td><span class="muted">${esc(rule.strictKey)}</span></td><td>${shared?'<span class="badge wait">是，需复核</span>':'否'}</td><td>${ready?`${hits.length} 笔`:'—'}</td><td class="num">${ready?money(sum(hits.map(r=>r.amount))):'—'}</td><td><div class="rule-actions"><button class="rule-action" type="button" data-rule-action="edit" data-rule-id="${esc(rule.id)}">编辑</button><button class="rule-action ${rule.active!==false?'danger':''}" type="button" data-rule-action="toggle" data-rule-id="${esc(rule.id)}">${rule.active!==false?'停用':'启用'}</button></div></td></tr>`}).join(''):`<tr><td colspan="10"><div class="empty"><strong>${state.mappingFilter==='pending'?'没有待确认的独立游戏规则':state.mappingFilter==='disabled'?'没有已停用的独立游戏规则':'还没有独立游戏规则'}</strong>${state.mappingFilter?'点击顶部卡片可回到全部规则。':'点击右上角新增独立游戏规则。'}</div></td></tr>`;
       updateMappingActions();
@@ -680,22 +805,272 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function sourceCard(r,type){ const base=r[type], final=finalSide(r,type), sources=(type==='bank'?state.banks:state.invoices).filter(x=>base.candidateIds.includes(x.id)).sort((a,b)=>Math.abs(a.amount-r.amount)-Math.abs(b.amount-r.amount)); const title=type==='bank'?'当月回款候选':'当月发票候选';
       const items=sources.length?sources.map(x=>{const invoiceMeta=type==='invoice'&&x.taxRate?` · 税率 ${esc(x.taxRate)}`:'',taxLine=type==='invoice'?`<span class="tax-line">${Number.isFinite(x.taxAmount)?`税额 ¥ ${money(x.taxAmount)}`:'税额未提供'}</span>`:'';return `<label class="detail-item"><input type="checkbox" data-action="candidate" data-side="${type}" data-id="${r.id}" data-source="${x.id}" ${final.ids.includes(x.id)?'checked':''}><div><strong>${esc(x.company)}</strong><div class="meta">${esc(x.date)}${invoiceMeta} · ${esc(x.file)} · ${esc(x.sheet)} 第 ${x.row} 行${x.reason?' · '+esc(x.reason):''}</div></div><span class="source-amount"><span class="amt">¥ ${money(x.amount)}</span>${taxLine}</span></label>`}).join(''):'<div class="empty" style="padding:28px 12px">同主体、同公司在本月没有可用候选</div>';
       const taxTotal=type==='invoice'&&final.taxKnownCount?` · 税额 ¥ ${money(final.taxAmount)}${final.taxKnownCount<final.sourceCount?'（部分）':''}`:''; return `<section class="detail-card"><h4>${title} · ${esc(base.matchType)}</h4><div class="detail-list">${items}</div><div class="detail-foot"><span class="delta">已选 ¥ ${money(final.amount)}${taxTotal} · 差额 ¥ ${money(round2(final.amount-r.amount))}</span><button class="btn blue small" data-action="confirm" data-side="${type}" data-id="${r.id}">确认所选</button></div></section>`; }
+    /* ====== 匹配组与系统勾选：核心模型 ====== */
+    function detailByFp(fp){ return state.mapping.find(d=>detailFingerprint(d)===fp) }
+    function sourceByStableKey(key,type){ const arr=type==='bank'?state.banks:state.invoices; return arr.find(x=>x.stableKey===key) }
+    function uoRuleForDetail(detail){ return UO_RULES.find(r=>r.active!==false&&r.entity===detail.entity&&r.channelKey===detail.channelKey&&r.companyKey===detail.companyKey) }
+    function detailSettlementGroup(detail){ const rule=uoRuleForDetail(detail); return rule?.settlementGroup||SETTLEMENT_GROUPS[detail.channel]||'' }
+    function detailGame(detail){ return '—' }
+    function checkStatusFor(fp,side){ const k=`${side}:${fp}`; const v=state.checkStatus[k]; if(v&&v.status) return v; return {status:CHECK_STATUS.PENDING,confirmer:'',time:''} }
+    function setCheckStatus(fp,side,status){ const k=`${side}:${fp}`; if(status===CHECK_STATUS.PENDING){ delete state.checkStatus[k] } else { state.checkStatus[k]={status,confirmer:currentOperator(),time:nowTimestamp()} } saveCheckStatus(); markDirty(); }
+    function matchGroupsOfType(type){ return state.matchGroups.filter(g=>g.type===type) }
+    function matchGroupForSource(stableKey,type){ return state.matchGroups.find(g=>g.type===type&&g.sourceKeys.includes(stableKey)) }
+    function matchGroupForDetail(fp,type){ return state.matchGroups.find(g=>g.type===type&&g.detailFps.includes(fp)) }
+    function isSourceOccupied(stableKey,type,excludeGroupId=null){ return state.matchGroups.some(g=>g.id!==excludeGroupId&&g.type===type&&g.status!=='draft'&&g.sourceKeys.includes(stableKey)) }
+    function isDetailOccupied(fp,type,excludeGroupId=null){ return state.matchGroups.some(g=>g.id!==excludeGroupId&&g.type===type&&g.status!=='draft'&&g.detailFps.includes(fp)) }
+    function matchGroupTotal(group){ const sources=group.sourceKeys.map(k=>sourceByStableKey(k,group.type)).filter(Boolean); const details=group.detailFps.map(detailByFp).filter(Boolean); return {sourceTotal:sum(sources.map(x=>x.amount)),detailTotal:sum(details.map(x=>x.amount)),sourceCount:sources.length,detailCount:details.length} }
+    function matchGroupDelta(group){ const t=matchGroupTotal(group); return round2(t.sourceTotal-t.detailTotal) }
+    function matchGroupDerivedStatus(group){ const t=matchGroupTotal(group); const delta=cents(t.sourceTotal-t.detailTotal); if(group.status==='draft') return MATCH_STATUS.DRAFT; if(t.sourceCount===0||t.detailCount===0) return MATCH_STATUS.REVIEW; if(delta===0) return MATCH_STATUS.MATCHED; if(Math.abs(delta)<=100) return MATCH_STATUS.REVIEW; return MATCH_STATUS.PARTIAL }
+    function groupClosedOnSide(group,side){ if(!group||group.status!=='confirmed') return false; const allChecked=group.detailFps.every(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.CHECKED||s.status===CHECK_STATUS.NONE}); return allChecked }
+    function groupCheckProgress(group,side){ if(!group) return {checked:0,total:0,fully:false}; const checked=group.detailFps.filter(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.CHECKED}).length; const none=group.detailFps.filter(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.NONE}).length; const total=group.detailFps.length; return {checked,none,total,fully:checked+none===total&&total>0,partial:checked>0&&checked<total} }
+    function groupClosureLabel(group){ if(!group) return ''; const inv=groupCheckProgress(group,'invoice'), bank=groupCheckProgress(group,'bank'); const sideLabel=p=>p.fully?'已勾选':p.partial?'部分已勾选':'待勾选'; const invL=group.type==='invoice'?sideLabel(inv):'无需'; const bankL=group.type==='bank'?sideLabel(bank):'无需'; const own=group.type==='invoice'?sideLabel(inv):sideLabel(bank); return own }
+    function newMatchGroupId(){ return `mg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}` }
+    function persistMatchGroup(group){ saveMatchGroups(); markDirty() }
+    function commitMatchGroup(group){ group.status='confirmed'; group.confirmer=currentOperator(); group.confirmTime=nowTimestamp(); group.modifier=currentOperator(); group.modifyTime=nowTimestamp(); persistMatchGroup(group) }
+    function updateMatchGroupMod(group){ group.modifier=currentOperator(); group.modifyTime=nowTimestamp(); persistMatchGroup(group) }
+    function deleteMatchGroup(id){ const idx=state.matchGroups.findIndex(g=>g.id===id); if(idx>=0){ state.matchGroups.splice(idx,1); saveMatchGroups(); markDirty() } }
+    function candidateSources(type,seedKey,excludeGroupId=null){
+      const all=type==='bank'?state.banks:state.invoices;
+      if(!state.month) return [];
+      const sameMonth=all.filter(x=>x.month===state.month&&x.valid);
+      const seed=sourceByStableKey(seedKey,type);
+      const ent=seed?.entity||'';
+      const pools=sameMonth.filter(x=>x.entity===ent);
+      const occ=new Set();
+      state.matchGroups.forEach(g=>{ if(g.id===excludeGroupId||g.status==='draft') return; g.sourceKeys.forEach(k=>occ.add(k)) });
+      return pools.map(x=>({...x,_occupied:occ.has(x.stableKey),_seed:x.stableKey===seedKey}));
+    }
+    function candidateDetails(type,seedKeys,excludeGroupId=null){
+      if(!state.month||!seedKeys.length) return [];
+      const seeds=seedKeys.map(k=>sourceByStableKey(k,type)).filter(Boolean);
+      if(!seeds.length) return [];
+      const ent=seeds[0].entity;
+      const docMonth=state.month;
+      const sourcesByCompany=new Set(); const sourcesByGroup=new Set();
+      seeds.forEach(s=>{sourcesByCompany.add(s.companyKey); const rule=UO_RULES.find(r=>r.active!==false&&r.entity===s.entity&&r.companyKey===s.companyKey); if(rule?.settlementGroup) sourcesByGroup.add(rule.settlementGroup)});
+      const occ=new Set();
+      state.matchGroups.forEach(g=>{ if(g.id===excludeGroupId||g.status==='draft') return; g.detailFps.forEach(fp=>occ.add(fp)) });
+      const rows=activeMappingRows();
+      return rows.filter(d=>{
+        if(d.entity!==ent) return false;
+        const dRule=uoRuleForDetail(d); const dGroup=dRule?.settlementGroup||detailSettlementGroup(d);
+        const companyMatch=sourcesByCompany.has(d.companyKey);
+        const groupMatch=dGroup&&sourcesByGroup.has(dGroup);
+        if(!companyMatch&&!groupMatch) return false;
+        return d;
+      }).map(d=>({...d,_fp:detailFingerprint(d),_occupied:occ.has(detailFingerprint(d)),_future:d.period>docMonth}));
+    }
+    function comboValidate(group){
+      const issues=[];
+      const t=matchGroupTotal(group);
+      const delta=cents(t.sourceTotal-t.detailTotal);
+      if(t.sourceCount===0) issues.push('未选择任何来源单据');
+      if(t.detailCount===0) issues.push('未选择任何业务明细');
+      const occSources=new Set(); group.sourceKeys.forEach(k=>{const occ=isSourceOccupied(k,group.type,group.id); if(occ) occSources.add(k)});
+      if(occSources.size) issues.push(`来源单据已被其他匹配组占用：${[...occSources].slice(0,3).map(k=>{const s=sourceByStableKey(k,group.type); return s?`${s.date} · ${s.company} · ¥${money(s.amount)}`:k}).join('；')}`);
+      const occDetails=new Set(); group.detailFps.forEach(fp=>{if(isDetailOccupied(fp,group.type,group.id)) occDetails.add(fp)});
+      if(occDetails.size) issues.push(`业务明细已被其他匹配组占用：${[...occDetails].size} 条`);
+      const overDetails=[]; group.detailFps.forEach(fp=>{ if(isDetailOccupied(fp,group.type,group.id)) overDetails.push(fp) });
+      const futureDetails=group.detailFps.map(detailByFp).filter(d=>d&&d.period>maxSourceMonth(group)).map(d=>`${d.period} · ${d.channel}`);
+      if(futureDetails.length) issues.push(`收入月份晚于单据月份（需人工确认）：${futureDetails.slice(0,3).join('；')}${futureDetails.length>3?' 等':''}`);
+      return {issues,delta,t,futureDetails:futureDetails.length>0};
+    }
+    function maxSourceMonth(group){ const months=group.sourceKeys.map(k=>sourceByStableKey(k,group.type)).filter(Boolean).map(s=>s.month).filter(Boolean).sort().reverse(); return months[0]||state.month||'' }
+    /* ====== 组合匹配面板 ====== */
+    function openComboPanel(type,seedKey,existingGroup=null){
+      if(!state.month){ toast('请先选择核对月份',true); return; }
+      if(!seedKey&&!existingGroup){ toast('未指定来源单据',true); return; }
+      const group=existingGroup||state.comboDraft||{id:newMatchGroupId(),type,sourceKeys:seedKey?[seedKey]:[],detailFps:[],status:'draft',confirmer:'',confirmTime:'',modifier:'',modifyTime:'',created:nowTimestamp()};
+      if(!existingGroup&&!state.comboDraft){ state.comboDraft=group }
+      if(existingGroup){ state.comboDraft=JSON.parse(JSON.stringify(existingGroup)); state.comboDraft._editingId=existingGroup.id }
+      const isEditing=!!state.comboDraft._editingId;
+      els.comboTitle.textContent=`${type==='invoice'?'发票':'回款'} 组合匹配 ${isEditing?'· 编辑':''}`;
+      els.comboSub.textContent=isEditing?`正在编辑匹配组 ${state.comboDraft._editingId}：可调整来源与业务明细，确认后将更新修改人与修改时间。`:'勾选来源单据与业务明细，差额为 0 时可确认匹配。';
+      els.comboSourceType.textContent=type==='invoice'?'发票':'回款';
+      els.comboSourceType.className=`badge ${type==='invoice'?'wait':'ok'}`;
+      populateComboFilters(type);
+      els.comboOverlay.hidden=false;
+      renderComboPanel();
+    }
+    function closeComboPanel(){ els.comboOverlay.hidden=true; state.comboDraft=null }
+    function comboCurrentSources(){ const g=state.comboDraft; if(!g) return []; return g.sourceKeys.map(k=>sourceByStableKey(k,g.type)).filter(Boolean) }
+    function comboCurrentDetails(){ const g=state.comboDraft; if(!g) return []; return g.detailFps.map(detailByFp).filter(Boolean) }
+    function populateComboFilters(type){
+      const sources=candidateSources(type,state.comboDraft?.sourceKeys[0]||'',state.comboDraft?._editingId);
+      const details=candidateDetails(type,state.comboDraft?.sourceKeys||[],state.comboDraft?._editingId);
+      const months=[...new Set(details.map(d=>d.period))].sort();
+      const channels=[...new Set(details.map(d=>d.channel))].sort();
+      const games=[...new Set(details.map(d=>detailGame(d)))].sort();
+      const cur=state.comboFilter;
+      els.comboFilterMonth.innerHTML=`<option value="">全部收入月份</option>`+months.map(m=>`<option ${m===cur.month?'selected':''}>${esc(m)}</option>`).join('');
+      els.comboFilterChannel.innerHTML=`<option value="">全部渠道</option>`+channels.map(c=>`<option ${c===cur.channel?'selected':''}>${esc(c)}</option>`).join('');
+      els.comboFilterGame.innerHTML=`<option value="">全部游戏</option>`+games.map(g=>`<option ${g===cur.game?'selected':''}>${esc(g)}</option>`).join('');
+      els.comboOnlyOpen.checked=cur.onlyOpen; els.comboAllowFuture.checked=cur.allowFuture; els.comboShowOccupied.checked=cur.showOccupied;
+    }
+    function renderComboPanel(){
+      const g=state.comboDraft; if(!g){ closeComboPanel(); return; }
+      const sourcesAll=candidateSources(g.type,g.sourceKeys[0]||'',g._editingId);
+      const showOccupied=state.comboFilter.showOccupied;
+      const sourceList=sourcesAll.map(s=>{
+        const checked=g.sourceKeys.includes(s.stableKey);
+        const occupied=s._occupied&&!checked;
+        const disabled=s._occupied&&!checked&&!showOccupied;
+        if(disabled) return '';
+        const occPill=occupied?`<span class="pill risk">已被其他组占用</span>`:'';
+        const seedPill=s._seed?`<span class="pill ok">起点</span>`:'';
+        return `<label class="combo-item ${disabled?'disabled':''}"><input type="checkbox" data-combo-source="${esc(s.stableKey)}" ${checked?'checked':''} ${occupied?'disabled':''}><div><strong>${esc(s.company)}</strong><div class="meta">${esc(s.date)} · ${esc(s.entity)} · ${esc(s.sheet)} 第 ${s.row} 行</div>${occPill}${seedPill}</div><span class="amt">¥ ${money(s.amount)}</span></label>`;
+      }).filter(Boolean).join('');
+      els.comboSourceList.innerHTML=sourceList||'<div class="empty" style="padding:24px">同主体本月没有可用来源单据</div>';
+      const detailsAll=candidateDetails(g.type,g.sourceKeys,g._editingId);
+      const f=state.comboFilter;
+      const filteredDetails=detailsAll.filter(d=>{
+        if(f.month&&d.period!==f.month) return false;
+        if(f.channel&&d.channel!==f.channel) return false;
+        if(f.game&&detailGame(d)!==f.game) return false;
+        if(f.q&&!normalizeText(d.company+d.channel+d.period).includes(f.q)) return false;
+        if(f.onlyOpen&&!d._occupied===false&&d._occupied) return false;
+        if(f.allowFuture===false&&d._future) return false;
+        return true;
+      });
+      els.comboPoolCount.textContent=filteredDetails.length;
+      const docMonth=maxSourceMonth(g);
+      const detailList=filteredDetails.map(d=>{
+        const checked=g.detailFps.includes(d._fp);
+        const occupied=d._occupied&&!checked;
+        const future=d._future;
+        const disabled=occupied;
+        const occPill=occupied?`<span class="pill risk">已占用</span>`:'';
+        const futurePill=future?`<span class="pill risk">晚于单据月份</span>`:'';
+        return `<label class="combo-item ${disabled?'disabled':''}"><input type="checkbox" data-combo-detail="${esc(d._fp)}" ${checked?'checked':''} ${disabled?'disabled':''}><div><strong>${esc(d.company)}</strong><div class="meta">${esc(d.period)} · ${esc(d.channel)} · ${esc(d.entity)} · ${esc(d.sheet)} 第 ${d.row} 行</div>${occPill}${futurePill}</div><span class="amt">¥ ${money(d.amount)}</span></label>`;
+      }).join('');
+      els.comboDetailList.innerHTML=detailList||'<div class="empty" style="padding:24px">同主体/共享结算组内没有可用的业务明细候选。可尝试关闭「仅未闭环」或开启「允许晚于单据月份」。</div>';
+      const t=matchGroupTotal(g); const delta=round2(t.sourceTotal-t.detailTotal);
+      els.comboSourceTotal.textContent='¥ '+money(t.sourceTotal);
+      els.comboDetailTotal.textContent='¥ '+money(t.detailTotal);
+      els.comboDelta.textContent='¥ '+money(delta);
+      const val=comboValidate(g);
+      els.comboDeltaHint.textContent=val.futureDetails?'含未来月份（例外）':'';
+      els.comboDelta.className='combo-delta '+(cents(delta)===0?'ok':'warn');
+      els.comboDelta.querySelector('strong').style.color=cents(delta)===0?'var(--green)':'var(--amber)';
+      const conflictEl=els.comboConflict;
+      if(val.issues.length){ conflictEl.hidden=false; conflictEl.innerHTML=val.issues.map(i=>`<div>· ${esc(i)}</div>`).join(''); }
+      else { conflictEl.hidden=true; conflictEl.innerHTML=''; }
+      els.comboConfirm.disabled=cents(delta)!==0||val.issues.length>0||t.sourceCount===0||t.detailCount===0;
+      els.comboDraft.disabled=t.sourceCount===0&&t.detailCount===0;
+    }
+    function comboToggleSource(key){ const g=state.comboDraft; if(!g) return; const i=g.sourceKeys.indexOf(key); if(i>=0) g.sourceKeys.splice(i,1); else g.sourceKeys.push(key); renderComboPanel() }
+    function comboToggleDetail(fp){ const g=state.comboDraft; if(!g) return; const i=g.detailFps.indexOf(fp); if(i>=0) g.detailFps.splice(i,1); else g.detailFps.push(fp); renderComboPanel() }
+    function comboSaveDraft(){ const g=state.comboDraft; if(!g){ toast('无可保存的草稿',true); return; } if(g.sourceKeys.length===0&&g.detailFps.length===0){ toast('请至少选择一项来源或业务明细',true); return; } g.status='draft'; g.modifier=currentOperator(); g.modifyTime=nowTimestamp(); if(!state.matchGroups.find(x=>x.id===g.id)) state.matchGroups.push(g); else Object.assign(state.matchGroups.find(x=>x.id===g.id),g); saveMatchGroups(); markDirty(); toast('已保存为部分匹配草稿'); closeComboPanel(); renderAll() }
+    function comboConfirm(){ const g=state.comboDraft; if(!g){ toast('无可确认的匹配组',true); return; } const val=comboValidate(g); const t=matchGroupTotal(g); if(cents(t.sourceTotal-t.detailTotal)!==0){ toast('差额不为 0，无法确认为完整匹配',true); return; } if(val.issues.length){ toast(val.issues[0],true); return; } if(t.sourceCount===0||t.detailCount===0){ toast('来源或业务明细为空',true); return; } const isEditing=!!g._editingId; const finalGroup={...g}; delete finalGroup._editingId; commitMatchGroup(finalGroup); if(isEditing){ const idx=state.matchGroups.findIndex(x=>x.id===finalGroup.id); if(idx>=0) state.matchGroups[idx]=finalGroup; else state.matchGroups.push(finalGroup); } else { state.matchGroups.push(finalGroup); } saveMatchGroups(); markDirty(); toast('匹配组已确认'); closeComboPanel(); renderAll() }
+    /* ====== 系统勾选清单 ====== */
+    function checklistRows(){
+      const rows=[];
+      for(const g of state.matchGroups){
+        if(g.status!=='confirmed') continue;
+        for(const fp of g.detailFps){ const d=detailByFp(fp); if(!d) continue; const inv=checkStatusFor(fp,'invoice'); const bank=checkStatusFor(fp,'bank'); rows.push({detail:d,group:g,inv,bank}); }
+      }
+      return rows;
+    }
+    function checklistFilterRows(rows){
+      const q=normalizeText(els.filterChecklistSearch?.value||'');
+      if(!q) return rows;
+      return rows.filter(r=>normalizeText(r.detail.entity+r.detail.channel+r.detail.company+r.detail.period).includes(q));
+    }
+    function classifyChecklistRow(r){
+      const isInvOkForGroup=r.group.type==='invoice'; const isBankOkForGroup=r.group.type==='bank';
+      const invValid=isInvOkForGroup||r.inv.status!==CHECK_STATUS.PENDING;
+      const bankValid=isBankOkForGroup||r.bank.status!==CHECK_STATUS.PENDING;
+      if(r.inv.status===CHECK_STATUS.CHECKED||r.bank.status===CHECK_STATUS.CHECKED) return 'checked';
+      const mismatch=(r.group.type==='invoice'&&r.inv.status===CHECK_STATUS.PENDING)!==(r.group.type==='bank'&&r.bank.status===CHECK_STATUS.PENDING);
+      if(r.inv.status===CHECK_STATUS.NONE||r.bank.status===CHECK_STATUS.NONE) return 'exception';
+      return r.group.type==='invoice'?'invoice-pending':'bank-pending';
+    }
+    function renderChecklist(){
+      const ready=state.months.length>0&&state.matchGroups.some(g=>g.status==='confirmed');
+      els.checklistEmpty.hidden=ready; els.checklistContent.hidden=!ready;
+      if(!ready){ $('#navCountChecklist').textContent='—'; return; }
+      const all=checklistFilterRows(checklistRows());
+      const groups={ 'invoice-pending':[], 'bank-pending':[], 'checked':[], 'exception':[] };
+      all.forEach(r=>{ const k=classifyChecklistRow(r); (groups[k]||groups['exception']).push(r) });
+      $('#countChkInvPending').textContent=groups['invoice-pending'].length;
+      $('#countChkBankPending').textContent=groups['bank-pending'].length;
+      $('#countChkChecked').textContent=groups['checked'].length;
+      $('#countChkException').textContent=groups['exception'].length;
+      const activeTab=state.checklistTab;
+      const shown=groups[activeTab]||[];
+      $('#navCountChecklist').textContent=groups['invoice-pending'].length+groups['bank-pending'].length;
+      $('#checklistResultCount').textContent=`显示 ${shown.length} / ${all.length} 条`;
+      const summary={
+        pending:groups['invoice-pending'].length+groups['bank-pending'].length,
+        checked:groups['checked'].length,
+        exception:groups['exception'].length,
+        checkedAmount:sum(groups['checked'].map(r=>r.detail.amount))
+      };
+      els.checklistSummary.innerHTML=[
+        {label:'待勾选',value:summary.pending,tone:'wait'},
+        {label:'已勾选',value:summary.checked,tone:'ok'},
+        {label:'异常',value:summary.exception,tone:'risk'},
+        {label:'已勾选金额',value:'¥ '+money(summary.checkedAmount),tone:'ok'}
+      ].map(c=>`<div class="mini-kpi"><div class="label">${c.label}</div><div class="value" style="color:var(--${c.tone==='ok'?'green':c.tone==='wait'?'amber':'red'})">${c.value}</div></div>`).join('');
+      const groupLabel=g=>`<span class="badge muted">${esc(g.id)}</span>`;
+      const detailCell=d=>`<td class="nowrap">${esc(d.entity)}</td><td>${esc(d.period)}</td><td><strong>${esc(d.channel)}</strong></td><td class="company">${esc(d.company)}</td><td>${esc(detailGame(d))}</td><td class="num">¥ ${money(d.amount)}</td><td>${groupLabel(d._group||null)}</td>`;
+      function rowActions(fp,side,checked){ return `<div class="chk-actions"><button type="button" class="badge-btn ${checked?'ok':''}" data-chk-mark="${esc(fp)}" data-chk-side="${side}" data-chk-set="${checked?CHECK_STATUS.PENDING:CHECK_STATUS.CHECKED}">${checked?'已勾选':'标记已勾选'}</button><button type="button" class="badge-btn" data-chk-mark="${esc(fp)}" data-chk-side="${side}" data-chk-set="${CHECK_STATUS.NONE}">无需勾选</button></div>` }
+      if(activeTab==='invoice-pending'){
+        els.chkInvPendingBody.innerHTML=shown.length?shown.map(r=>{const fp=detailFingerprint(r.detail);const checked=r.inv.status===CHECK_STATUS.CHECKED;return `<tr class="chk-row"><td><input type="checkbox" data-chk-select="${esc(fp)}" data-chk-side="invoice"></td>${detailCell({...r.detail,_group:r.group})}<td><span class="badge ${r.inv.status===CHECK_STATUS.CHECKED?'ok':r.inv.status===CHECK_STATUS.NONE?'muted':'wait'}">${esc(r.inv.status)}</span>${r.inv.confirmer?`<div class="muted">${esc(r.inv.confirmer)} · ${esc(r.inv.time)}</div>`:''}</td><td>${rowActions(fp,'invoice',checked)}</td></tr>`}).join(''):`<tr><td colspan="11"><div class="empty"><strong>没有开票待勾选的明细</strong>所有匹配组中开票侧均已勾选或无需勾选。</div></td></tr>`;
+      }
+      if(activeTab==='bank-pending'){
+        els.chkBankPendingBody.innerHTML=shown.length?shown.map(r=>{const fp=detailFingerprint(r.detail);const checked=r.bank.status===CHECK_STATUS.CHECKED;return `<tr class="chk-row"><td><input type="checkbox" data-chk-select="${esc(fp)}" data-chk-side="bank"></td>${detailCell({...r.detail,_group:r.group})}<td><span class="badge ${r.bank.status===CHECK_STATUS.CHECKED?'ok':r.bank.status===CHECK_STATUS.NONE?'muted':'wait'}">${esc(r.bank.status)}</span>${r.bank.confirmer?`<div class="muted">${esc(r.bank.confirmer)} · ${esc(r.bank.time)}</div>`:''}</td><td>${rowActions(fp,'bank',checked)}</td></tr>`}).join(''):`<tr><td colspan="11"><div class="empty"><strong>没有回款待勾选的明细</strong>所有匹配组中回款侧均已勾选或无需勾选。</div></td></tr>`;
+      }
+      if(activeTab==='checked'){
+        els.chkCheckedBody.innerHTML=shown.length?shown.map(r=>{const invChecked=r.inv.status===CHECK_STATUS.CHECKED,bankChecked=r.bank.status===CHECK_STATUS.CHECKED;const types=[]; if(invChecked)types.push('开票'); if(bankChecked)types.push('回款');const fp=detailFingerprint(r.detail);const side=invChecked?'invoice':'bank';const info=invChecked?r.inv:r.bank;return `<tr class="chk-row"><td><input type="checkbox" data-chk-select="${esc(fp)}" data-chk-side="${side}"></td><td>${types.join(' + ')}</td>${detailCell({...r.detail,_group:r.group})}<td>${esc(info.confirmer)}</td><td>${esc(info.time)}</td><td>${rowActions(fp,side,true)}</td></tr>`}).join(''):`<tr><td colspan="12"><div class="empty"><strong>尚未标记任何已勾选</strong>去 UO 系统完成勾选后，回到这里标记对应明细。</div></td></tr>`;
+      }
+      if(activeTab==='exception'){
+        els.chkExceptionBody.innerHTML=shown.length?shown.map(r=>{const fp=detailFingerprint(r.detail);const reasons=[]; if(r.inv.status===CHECK_STATUS.NONE)reasons.push('开票：无需勾选'); if(r.bank.status===CHECK_STATUS.NONE)reasons.push('回款：无需勾选'); return `<tr class="chk-row"><td><input type="checkbox" data-chk-select="${esc(fp)}" data-chk-side="invoice"></td><td>—</td>${detailCell({...r.detail,_group:r.group})}<td>${reasons.join('；')||'人工标记为无需勾选'}</td><td><button type="button" class="badge-btn" data-chk-mark="${esc(fp)}" data-chk-side="invoice" data-chk-set="${CHECK_STATUS.PENDING}">恢复待勾选</button></td></tr>`}).join(''):`<tr><td colspan="10"><div class="empty"><strong>没有异常项</strong>所有明细均可正常勾选。</div></td></tr>`;
+      }
+    }
+    function switchChecklistTab(tab){ state.checklistTab=tab; document.querySelectorAll('[data-checklist-tab]').forEach(x=>x.classList.toggle('active',x.dataset.checklistTab===tab)); document.querySelectorAll('[id^="tab-checklist-"]').forEach(x=>x.classList.toggle('active',x.id===`tab-checklist-${tab}`)); renderChecklist() }
+    function onChecklistClick(e){
+      const markBtn=e.target.closest('[data-chk-mark]');
+      if(markBtn){ const fp=markBtn.dataset.chkMark, side=markBtn.dataset.chkSide, set=markBtn.dataset.chkSet; setCheckStatus(fp,side,set); renderChecklist(); toast(set===CHECK_STATUS.PENDING?'已撤销勾选标记':set===CHECK_STATUS.CHECKED?'已标记为已勾选':'已标记为无需勾选'); return; }
+    }
+    function getSelectedChecklistItems(){
+      const checks=[...document.querySelectorAll('[data-chk-select]:checked')];
+      return checks.map(c=>({fp:c.dataset.chkSelect,side:c.dataset.chkSide}));
+    }
+    function batchMarkCheck(side,status){
+      const items=getSelectedChecklistItems().filter(x=>x.side===side);
+      if(!items.length){ toast(`请先勾选要批量标记的${side==='invoice'?'开票':'回款'}明细`,true); return; }
+      items.forEach(x=>setCheckStatus(x.fp,x.side,status)); renderChecklist(); toast(`已批量更新 ${items.length} 条 ${side==='invoice'?'开票':'回款'} 勾选状态`);
+    }
+    function batchUnmarkCheck(){
+      const items=getSelectedChecklistItems();
+      if(!items.length){ toast('请先勾选要撤销的明细',true); return; }
+      items.forEach(x=>setCheckStatus(x.fp,x.side,CHECK_STATUS.PENDING)); renderChecklist(); toast(`已批量撤销 ${items.length} 条勾选状态`);
+    }
+    function batchMarkNone(){
+      const items=getSelectedChecklistItems();
+      if(!items.length){ toast('请先勾选要标记的明细',true); return; }
+      items.forEach(x=>setCheckStatus(x.fp,x.side,CHECK_STATUS.NONE)); renderChecklist(); toast(`已批量标记 ${items.length} 条为无需勾选`);
+    }
+    /* ====== 渲染未匹配 + 组合按钮 ====== */
+    function onComboStartClick(e){ const btn=e.target.closest('[data-combo-start]'); if(!btn) return; const type=btn.dataset.comboType, key=btn.dataset.comboStart; const existing=matchGroupForSource(key,type); if(existing&&existing.status!=='draft'){ state.comboDraft=JSON.parse(JSON.stringify(existing)); state.comboDraft._editingId=existing.id; openComboPanel(type,key,existing); } else if(existing){ state.comboDraft=existing; openComboPanel(type,key,existing); } else { openComboPanel(type,key); } }
     function renderUnmatched(){
       const banks=unmatched('bank'), invoices=unmatched('invoice');
       const banksPending=banks.filter(x=>!isEntered(x)), invoicesPending=invoices.filter(x=>!isEntered(x));
       $('#countBanks').textContent=banksPending.length; $('#countInvoices').textContent=invoicesPending.length;
       const visibleBanks=state.showEntered?banks:banksPending, visibleInvoices=state.showEntered?invoices:invoicesPending;
       const entryBtn=x=>{const entered=isEntered(x);return `<button type="button" class="badge-btn ${entered?'ok':''}" data-entry="${esc(x.stableKey)}" title="${entered?'点击恢复为待处理':'点击标记为已录入'}">${entered?'已录入':'待处理'}</button>`};
-      els.bankBody.innerHTML=visibleBanks.length?visibleBanks.map(x=>`<tr><td>${esc(x.entity||'未识别')}</td><td>${esc(x.date)}</td><td class="company">${esc(x.company)}</td><td>${esc(x.currency)}</td><td class="num">¥ ${money(x.amount)}</td><td>${esc(x.file)}</td><td>${esc(x.sheet)} / ${x.row}</td><td>${entryBtn(x)}</td></tr>`).join(''):`<tr><td colspan="8"><div class="empty"><strong>${banksPending.length?'本月流水均已处理':'本月流水均已关联'}</strong>${banks.length>banksPending.length?`已录入 ${banks.length-banksPending.length} 笔已隐藏，勾选“显示已录入”可回看。`:'没有未匹配收入流水。'}</div></td></tr>`;
-      els.invoiceBody.innerHTML=visibleInvoices.length?visibleInvoices.map(x=>`<tr><td>${esc(x.entity||'未识别')}</td><td>${esc(x.date)}</td><td class="company">${esc(x.company)}</td><td class="num">¥ ${money(x.amount)}</td><td class="num">${Number.isFinite(x.taxAmount)?'¥ '+money(x.taxAmount):'—'}</td><td>${esc(x.status)}</td><td>${esc(x.positive)}</td><td>${esc(unmatchedInvoiceReason(x))}</td><td>${esc(x.file)}</td><td>${entryBtn(x)}</td></tr>`).join(''):`<tr><td colspan="10"><div class="empty"><strong>${invoicesPending.length?'本月发票均已处理':'本月发票均已关联'}</strong>${invoices.length>invoicesPending.length?`已录入 ${invoices.length-invoicesPending.length} 张已隐藏，勾选“显示已录入”可回看。`:'没有未匹配发票。'}</div></td></tr>`;
+      const comboBtn=(x,type)=>{const occ=matchGroupForSource(x.stableKey,type);return `<button type="button" class="badge-btn ${occ?'ok':''}" data-combo-start="${esc(x.stableKey)}" data-combo-type="${type}" title="${occ?'该单据已在匹配组中，点击查看/编辑':'从此单据开始组合匹配'}">${occ?'查看匹配组':'组合匹配'}</button>`};
+      els.bankBody.innerHTML=visibleBanks.length?visibleBanks.map(x=>`<tr><td>${esc(x.entity||'未识别')}</td><td>${esc(x.date)}</td><td class="company">${esc(x.company)}</td><td>${esc(x.currency)}</td><td class="num">¥ ${money(x.amount)}</td><td>${esc(x.file)}</td><td>${esc(x.sheet)} / ${x.row}</td><td><div class="chk-actions">${entryBtn(x)}${comboBtn(x,'bank')}</div></td></tr>`).join(''):`<tr><td colspan="8"><div class="empty"><strong>${banksPending.length?'本月流水均已处理':'本月流水均已关联'}</strong>${banks.length>banksPending.length?`已录入 ${banks.length-banksPending.length} 笔已隐藏，勾选“显示已录入”可回看。`:'没有未匹配收入流水。'}</div></td></tr>`;
+      els.invoiceBody.innerHTML=visibleInvoices.length?visibleInvoices.map(x=>`<tr><td>${esc(x.entity||'未识别')}</td><td>${esc(x.date)}</td><td class="company">${esc(x.company)}</td><td class="num">¥ ${money(x.amount)}</td><td class="num">${Number.isFinite(x.taxAmount)?'¥ '+money(x.taxAmount):'—'}</td><td>${esc(x.status)}</td><td>${esc(x.positive)}</td><td>${esc(unmatchedInvoiceReason(x))}</td><td>${esc(x.file)}</td><td><div class="chk-actions">${entryBtn(x)}${comboBtn(x,'invoice')}</div></td></tr>`).join(''):`<tr><td colspan="10"><div class="empty"><strong>${invoicesPending.length?'本月发票均已处理':'本月发票均已关联'}</strong>${invoices.length>invoicesPending.length?`已录入 ${invoices.length-invoicesPending.length} 张已隐藏，勾选“显示已录入”可回看。`:'没有未匹配发票。'}</div></td></tr>`;
     }
     function renderChecks(){ const issues=state.checks.filter(c=>c.level!=='ok'); els.checkList.innerHTML=issues.map(c=>`<div class="check ${c.level}"><i></i><div><div class="msg">${esc(c.msg)}</div>${c.detail?`<div class="detail">${esc(c.detail)}</div>`:''}</div></div>`).join('')||(state.fileReports.length?'<div class="check"><i></i><div><div class="msg">导入校验通过</div><div class="detail">文件结构、主体与必需数据均已识别。</div></div></div>':''); renderImportStatus(); }
     function renderKpis(rows=currentFiltered()){ const filters=activeReconcileFilters(), expected=sum(rows.map(r=>r.amount)), invoiced=sum(rows.filter(r=>finalSide(r,'invoice').status==='已开票').map(r=>r.amount)), banked=sum(rows.filter(r=>finalSide(r,'bank').status==='已回款').map(r=>r.amount)); const review=sum(rows.filter(r=>['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'invoice').status)||['待复核','部分匹配','冲突待复核'].includes(finalSide(r,'bank').status)).map(r=>r.amount)), scopedUnmatched=filteredUnmatched(rows,filters);
       const pendingBanks=scopedUnmatched.banks.filter(x=>!isEntered(x)).length, pendingInvoices=scopedUnmatched.invoices.filter(x=>!isEntered(x)).length, enteredCount=scopedUnmatched.banks.length-pendingBanks+scopedUnmatched.invoices.length-pendingInvoices;
       $('#kpiExpected').textContent='¥ '+money(expected);$('#kpiRows').textContent=filters.active?`筛选后 ${rows.length} / ${state.results.length} 组 Mapping`:`${rows.length} 组 Mapping`;$('#kpiInvoice').textContent='¥ '+money(invoiced);$('#kpiBank').textContent='¥ '+money(banked);$('#kpiReview').textContent='¥ '+money(review);$('#kpiUnmatched').textContent=pendingBanks+pendingInvoices;$('#kpiUnmatchedSub').textContent=(filters.active?'当前筛选范围 · 流水 + 发票':'流水 + 发票')+(enteredCount?` · 已录入 ${enteredCount}`:'');
     }
-    function updateNavigationCounts(){ $('#navCountReconcile').textContent=state.month?state.results.length:'—'; $('#navCountIndie').textContent=state.month?state.indieMatches.length:'—'; $('#navCountMapping').textContent=UO_RULES.filter(r=>r.active!==false).length+INDIE_RULES.filter(r=>r.active!==false).length; }
-    function renderAll(){ const ready=state.months.length>0; els.workspace.className=ready?'show':''; els.indieEmpty.hidden=ready; els.indieContent.hidden=!ready; $('#piplupMascot').classList.toggle('compact',ready); if(ready){state.indieMatches=classifyIndieBanks(); const ignoredBanks=state.banks.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length, ignoredInvoices=state.invoices.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length; addCheckOnce('ok','非 UO 来源已排除',`按当年 Mapping 公司范围，忽略非 UO 收入流水 ${ignoredBanks} 行、非 UO 发票 ${ignoredInvoices} 行。`); renderFilters();renderResults();renderUnmatched();renderIndie();} else state.indieMatches=[]; renderMapping();renderChecks();updateNavigationCounts(); }
+    function updateNavigationCounts(){ $('#navCountReconcile').textContent=state.month?state.results.length:'—'; $('#navCountIndie').textContent=state.month?state.indieMatches.length:'—'; $('#navCountMapping').textContent=UO_RULES.filter(r=>r.active!==false).length+INDIE_RULES.filter(r=>r.active!==false).length; const chkGroups=state.matchGroups.filter(g=>g.status==='confirmed'); let chkInvPending=0, chkBankPending=0; for(const g of chkGroups){ for(const fp of g.detailFps){ const inv=checkStatusFor(fp,'invoice'); const bank=checkStatusFor(fp,'bank'); if(g.type==='invoice'&&inv.status===CHECK_STATUS.PENDING) chkInvPending++; if(g.type==='bank'&&bank.status===CHECK_STATUS.PENDING) chkBankPending++; } } $('#navCountChecklist').textContent=state.months.length?((chkInvPending+chkBankPending)||'—'):'—'; }
+    function renderAll(){ const ready=state.months.length>0; els.workspace.className=ready?'show':''; els.indieEmpty.hidden=ready; els.indieContent.hidden=!ready; $('#piplupMascot').classList.toggle('compact',ready); if(ready){state.indieMatches=classifyIndieBanks(); const ignoredBanks=state.banks.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length, ignoredInvoices=state.invoices.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length; addCheckOnce('ok','非 UO 来源已排除',`按当年 Mapping 公司范围，忽略非 UO 收入流水 ${ignoredBanks} 行、非 UO 发票 ${ignoredInvoices} 行。`); renderFilters();renderResults();renderUnmatched();renderIndie();} else state.indieMatches=[]; renderMapping();renderChecks();renderChecklist();updateNavigationCounts(); }
     function updatePageHeader(){ const meta=PAGE_META[state.currentModule]||PAGE_META.reconcile; $('#pageTitle').textContent=meta.title; $('#pageLead').textContent=meta.lead; }
     function updateNavCollapsed(){ const shell=$('#appShell'),button=$('#navCollapseBtn'),collapsed=state.navCollapsed; shell.classList.toggle('nav-collapsed',collapsed); button.setAttribute('aria-expanded',String(!collapsed)); button.setAttribute('aria-label',collapsed?'展开工作区':'收起工作区'); button.title=collapsed?'展开工作区':'收起工作区'; button.querySelector('span').textContent=collapsed?'›':'‹'; }
     function toggleNavCollapsed(){ state.navCollapsed=!state.navCollapsed; try{localStorage.setItem(NAV_STORAGE_KEY,state.navCollapsed?'collapsed':'expanded')}catch{} updateNavCollapsed(); }
@@ -716,7 +1091,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       if(key==='pending'){ state.mappingFilter='pending'; hideUoMappingForm(); hideMappingForm(); switchMappingTab(stats.uoPending.length||!stats.indiePendingHits.length&&!stats.indiePendingRules.length?'uo':'indie'); return; }
       if(key==='disabled'){ state.mappingFilter='disabled'; hideUoMappingForm(); hideMappingForm(); switchMappingTab(stats.uoDisabled.length||!stats.indieDisabled.length?'uo':'indie'); }
     }
-    function switchModule(module){ state.currentModule=module; document.querySelectorAll('.primary-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.module===module)); document.querySelectorAll('.module-view').forEach(x=>x.classList.toggle('active',x.id===`module-${module}`)); document.querySelectorAll('.monthly-action').forEach(x=>x.style.display=module==='mapping'?'none':''); updatePageHeader(); if(module==='mapping')renderMapping(); }
+    function switchModule(module){ state.currentModule=module; document.querySelectorAll('.primary-nav-item').forEach(x=>x.classList.toggle('active',x.dataset.module===module)); document.querySelectorAll('.module-view').forEach(x=>x.classList.toggle('active',x.id===`module-${module}`)); document.querySelectorAll('.monthly-action').forEach(x=>x.style.display=module==='mapping'?'none':''); updatePageHeader(); if(module==='mapping')renderMapping(); if(module==='checklist')renderChecklist(); }
     function switchTab(tab){ state.currentTab=tab; const panel=document.querySelector('#module-reconcile .work-panel'); panel.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===tab)); panel.querySelectorAll('.tabview').forEach(x=>x.classList.toggle('active',x.id===`tab-${tab}`)); $('#toolbar').style.display=tab==='results'?'flex':'none'; }
     function hideMappingForm(){ els.mappingForm.classList.remove('show'); els.mappingForm.reset(); $('#mappingRuleId').value=''; }
     function hideUoMappingForm(){ els.uoMappingForm.classList.remove('show'); els.uoMappingForm.reset(); $('#uoMappingRuleId').value=''; }
@@ -728,7 +1103,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function showUoMappingForm(rule=null, draft=null){
       if(state.mappingTab!=='uo') switchMappingTab('uo');
       hideMappingForm();
-      els.uoMappingForm.classList.add('show'); $('#uoMappingFormTitle').textContent=rule?'编辑 UO 渠道对照':'新增 UO 渠道对照'; $('#uoMappingRuleId').value=rule?.id||''; $('#uoMappingChannel').value=rule?.channel||draft?.channel||''; $('#uoMappingEntity').value=rule?.entity||draft?.entity||'上海幻电'; $('#uoMappingInvoice').value=rule?.invoicePolicy||'normal'; $('#uoMappingCompany').value=rule?.company||draft?.company||''; $('#uoMappingNote').value=rule?.note||''; $('#uoMappingChannel').focus();
+      els.uoMappingForm.classList.add('show'); $('#uoMappingFormTitle').textContent=rule?'编辑 UO 渠道对照':'新增 UO 渠道对照'; $('#uoMappingRuleId').value=rule?.id||''; $('#uoMappingChannel').value=rule?.channel||draft?.channel||''; $('#uoMappingEntity').value=rule?.entity||draft?.entity||'上海幻电'; $('#uoMappingInvoice').value=rule?.invoicePolicy||'normal'; $('#uoMappingCompany').value=rule?.company||draft?.company||''; $('#uoMappingSettlement').value=rule?.settlementGroup||SETTLEMENT_GROUPS[rule?.channel||draft?.channel||'']||''; $('#uoMappingNote').value=rule?.note||''; $('#uoMappingChannel').focus();
     }
     function saveMappingForm(e){
       e.preventDefault(); const id=$('#mappingRuleId').value, channel=displayText($('#mappingChannel').value), entity=$('#mappingEntity').value, currency=$('#mappingCurrency').value, company=displayText($('#mappingCompany').value), aliases=$('#mappingAliases').value.split(/[,，\n]/).map(displayText).filter(Boolean), strictKey=strictCompanyKey(company);
@@ -738,11 +1113,11 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       if(existing)INDIE_RULES.splice(INDIE_RULES.indexOf(existing),1,next);else INDIE_RULES.push(next); saveIndieRules(); hideMappingForm(); renderAll(); toast(existing?'独立游戏规则已更新':'独立游戏规则已新增');
     }
     function saveUoMappingForm(e){
-      e.preventDefault(); const id=$('#uoMappingRuleId').value, channel=displayText($('#uoMappingChannel').value), entity=$('#uoMappingEntity').value, company=displayText($('#uoMappingCompany').value), invoicePolicy=$('#uoMappingInvoice').value, note=displayText($('#uoMappingNote').value);
+      e.preventDefault(); const id=$('#uoMappingRuleId').value, channel=displayText($('#uoMappingChannel').value), entity=$('#uoMappingEntity').value, company=displayText($('#uoMappingCompany').value), invoicePolicy=$('#uoMappingInvoice').value, settlementGroup=displayText($('#uoMappingSettlement').value)||SETTLEMENT_GROUPS[channel]||'', note=displayText($('#uoMappingNote').value);
       if(!channel||!company){toast('请填写渠道和开票公司',true);return}
       const channelKey=normalizeText(channel), companyKey=normalizeText(company);
       const duplicate=UO_RULES.find(r=>r.id!==id&&r.active!==false&&r.entity===entity&&r.channelKey===channelKey&&r.companyKey===companyKey); if(duplicate){toast('该主体、渠道和开票公司已有对照规则',true);return}
-      const existing=UO_RULES.find(r=>r.id===id), next=hydrateUoRule({id:id||`uo-rule-${Date.now()}`,channel,entity,company,invoicePolicy,note,active:existing?.active!==false});
+      const existing=UO_RULES.find(r=>r.id===id), next=hydrateUoRule({id:id||`uo-rule-${Date.now()}`,channel,entity,company,settlementGroup,invoicePolicy,note,active:existing?.active!==false});
       if(existing)UO_RULES.splice(UO_RULES.indexOf(existing),1,next);else UO_RULES.push(next); saveUoRules(); hideUoMappingForm(); renderAll(); toast(existing?'UO 对照已更新':'UO 对照已新增');
     }
     function onMappingTableClick(e){ const button=e.target.closest('[data-rule-action]'); if(!button)return; const rule=INDIE_RULES.find(r=>r.id===button.dataset.ruleId); if(!rule)return; if(button.dataset.ruleAction==='edit')showMappingForm(rule); if(button.dataset.ruleAction==='toggle'){rule.active=rule.active===false;saveIndieRules();renderAll();toast(rule.active?'独立游戏规则已启用':'独立游戏规则已停用')} }
@@ -806,7 +1181,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const rawChecks=[...state.fileReports.map(r=>({'类别':'文件识别','级别':r.ok?'通过':'错误','项目':r.name,'详情':`${r.type} · ${r.entity} · ${r.detail}`})),...state.checks.map(c=>({'类别':'导入检查','级别':c.level==='ok'?'通过':c.level==='warn'?'提醒':'错误','项目':c.msg,'详情':c.detail}))],checks=aggregateExportChecks(rawChecks);
       const rowsWithStatus=status=>resultRows.filter(r=>r['总状态']===status),sumRows=rows=>sum(rows.map(r=>r['申请金额'])),reviewRows=resultRows.filter(r=>['冲突待复核','待人工复核','双缺口'].includes(r['总状态'])),closedRows=rowsWithStatus('已闭环'),invoiceFollowRows=rowsWithStatus('待跟进开票'),bankFollowRows=rowsWithStatus('待跟进回款'),supplementRows=rowsWithStatus('待补前期票');
       const summary={generatedAt:exportTimestamp(),total:{count:resultRows.length,amount:sumRows(resultRows)},closed:{count:closedRows.length,amount:sumRows(closedRows)},review:{count:reviewRows.length,amount:sumRows(reviewRows)},invoiceFollow:{count:invoiceFollowRows.length,amount:sumRows(invoiceFollowRows)},bankFollow:{count:bankFollowRows.length,amount:sumRows(bankFollowRows)},supplement:{count:supplementRows.length,amount:sumRows(supplementRows)},invoiceProgress:{ok:resultRows.filter(r=>r['开票状态']==='已开票').length,review:resultRows.filter(r=>EXPORT_REVIEW_STATUSES.has(r['开票状态'])).length,unmatched:resultRows.filter(r=>r['开票状态']!=='已开票'&&!EXPORT_REVIEW_STATUSES.has(r['开票状态'])).length},bankProgress:{ok:resultRows.filter(r=>r['回款状态']==='已回款').length,review:resultRows.filter(r=>EXPORT_REVIEW_STATUSES.has(r['回款状态'])).length,unmatched:resultRows.filter(r=>r['回款状态']!=='已回款'&&!EXPORT_REVIEW_STATUSES.has(r['回款状态'])).length},quality:{passed:checks.filter(r=>r['级别']==='通过').length,warnings:checks.filter(r=>r['级别']==='提醒').length,warningRows:checks.filter(r=>r['级别']==='提醒').reduce((n,r)=>n+r['影响数量'],0),errors:checks.filter(r=>r['级别']==='错误').length},actions:resultRows.filter(r=>r['总状态']!=='已闭环').slice(0,8)};
-      return {resultRows,details,anomalies,indieRows,indieSummary,mappingRows,uoRows,checks,summary};
+      const matchGroupRows=state.matchGroups.map(g=>{const t=matchGroupTotal(g);const sources=g.sourceKeys.map(k=>sourceByStableKey(k,g.type)).filter(Boolean);const srcFile=sources.map(s=>`${s.file}!${s.sheet}!R${s.row}`).join(' / ');const orphan=g._orphan;return {'匹配组ID':g.id,'类型':g.type==='invoice'?'发票匹配组':'回款匹配组','状态':orphan?'悬空':(MATCH_STATUS[g.status]||g.status),'来源单据数':t.sourceCount,'来源合计':t.sourceTotal,'业务明细数':t.detailCount,'业务明细合计':t.detailTotal,'金额差额':round2(t.sourceTotal-t.detailTotal),'确认人':g.confirmer||'','确认时间':g.confirmTime||'','修改人':g.modifier||'','修改时间':g.modifyTime||'','来源单据':sources.map(s=>`${s.date} · ${s.company} · ¥${money(s.amount)}`).join(' / '),'来源文件':srcFile,'人工调整':g._editingId?'是':'否'}});
+      const checkStatusRows=[];for(const g of state.matchGroups){if(g.status!=='confirmed')continue;for(const fp of g.detailFps){const d=detailByFp(fp);if(!d)continue;const inv=checkStatusFor(fp,'invoice'),bank=checkStatusFor(fp,'bank');checkStatusRows.push({'匹配组ID':g.id,'业务明细指纹':fp,'主体':d.entity,'收入月份':d.period,'渠道':d.channel,'公司':d.company,'游戏':detailGame(d),'应匹配金额':d.amount,'匹配组类型':g.type==='invoice'?'发票':'回款','开票勾选状态':inv.status,'开票确认人':inv.confirmer,'开票确认时间':inv.time,'回款勾选状态':bank.status,'回款确认人':bank.confirmer,'回款确认时间':bank.time});}}
+      return {resultRows,details,anomalies,indieRows,indieSummary,mappingRows,uoRows,checks,summary,matchGroupRows,checkStatusRows};
     }
     function exportColumnLetter(number){let n=number,label='';while(n>0){const rem=(n-1)%26;label=String.fromCharCode(65+rem)+label;n=Math.floor((n-1)/26)}return label}
     function exportStatusStyle(value){const text=String(value||'');if(text.includes('冲突')||text.includes('错误'))return {fill:EXPORT_COLORS.redBg,font:EXPORT_COLORS.red};if(text.includes('复核')||text.includes('候选')||text.includes('部分匹配')||text==='提醒')return {fill:EXPORT_COLORS.amberBg,font:EXPORT_COLORS.amber};if(text.includes('待补')||text.includes('前期已开'))return {fill:EXPORT_COLORS.amberBg,font:EXPORT_COLORS.amber};if(text.includes('待跟进')||text==='UO 待处理')return {fill:EXPORT_COLORS.blueBg,font:EXPORT_COLORS.blue};if(text.startsWith('已')||text==='通过'||text==='启用')return {fill:EXPORT_COLORS.greenBg,font:EXPORT_COLORS.green};return {fill:EXPORT_COLORS.slateBg,font:EXPORT_COLORS.slate}}
@@ -839,6 +1216,8 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       exportAddDataSheet(workbook,{name:'04_来源异常',title:'来源异常',subtitle:'仅展示需要处理的未匹配回款与发票；已确认的独立游戏回款只保留在“05_独立游戏”。',headers:['来源类型','归属判断','主体','日期','往来单位','币种','金额','税额','异常原因','处置状态','处理建议','单据状态','来源文件','工作表','来源行'],rows:data.anomalies,widths:[12,18,12,13,32,10,16,16,34,12,30,18,34,26,10],tabColor:EXPORT_COLORS.amber,statusColumns:['归属判断','处置状态'],numericColumns:['金额','税额'],dateColumns:['日期'],xSplit:5});
       const indieHeaderRow=6+data.indieSummary.length,indieSheet=workbook.addWorksheet('05_独立游戏',{views:[{state:'frozen',xSplit:2,ySplit:indieHeaderRow,showGridLines:false,zoomScale:90}]});indieSheet.properties.tabColor={argb:EXPORT_COLORS.amber};const indieHeaders=['识别状态','主体','交易日期','银行原始名称','映射公司','渠道','币种','银行到账金额','命中方式','置信度','冲突提示','来源文件','工作表','来源行'];[18,12,13,32,32,12,10,17,18,11,40,34,26,10].forEach((w,i)=>indieSheet.getColumn(i+1).width=w);indieSheet.mergeCells('A1:N1');indieSheet.getCell('A1').value='独立游戏回款';indieSheet.getCell('A1').font={name:'Microsoft YaHei',size:18,bold:true,color:{argb:EXPORT_COLORS.navy}};indieSheet.getRow(1).height=34;indieSheet.mergeCells('A2:N2');indieSheet.getCell('A2').value='金额始终按币种分开汇总，不对 CNY、USD 或其他币种直接合计。';indieSheet.getCell('A2').font={name:'Microsoft YaHei',size:10,color:{argb:EXPORT_COLORS.muted}};const summaryHeaders=['币种','命中笔数','确认笔数','待复核笔数','确认金额','待复核金额'];summaryHeaders.forEach((h,i)=>indieSheet.getCell(4,i+1).value=h);exportApplyHeader(indieSheet.getRow(4));data.indieSummary.forEach((item,i)=>{const row=indieSheet.getRow(5+i);summaryHeaders.forEach((h,c)=>row.getCell(c+1).value=item[h]);row.getCell(5).numFmt=EXPORT_MONEY_FORMAT;row.getCell(6).numFmt=EXPORT_MONEY_FORMAT});if(data.indieSummary.length)exportApplyBody(indieSheet,5,4+data.indieSummary.length,6);const indieTitleRow=5+data.indieSummary.length;indieSheet.mergeCells(indieTitleRow,1,indieTitleRow,14);indieSheet.getCell(indieTitleRow,1).value='识别明细';indieSheet.getCell(indieTitleRow,1).font={name:'Microsoft YaHei',size:13,bold:true,color:{argb:EXPORT_COLORS.navy}};indieHeaders.forEach((h,i)=>indieSheet.getCell(indieHeaderRow,i+1).value=h);exportApplyHeader(indieSheet.getRow(indieHeaderRow));data.indieRows.forEach((item,i)=>{const row=indieSheet.getRow(indieHeaderRow+1+i);indieHeaders.forEach((h,c)=>{let value=item[h]??'';if(value===''||value===null)return;if(h==='交易日期'&&typeof value==='string')value=new Date(`${value}T00:00:00`);row.getCell(c+1).value=value});row.getCell(3).numFmt='yyyy-mm-dd';row.getCell(8).numFmt=EXPORT_MONEY_FORMAT;row.getCell(10).numFmt='0.0%';exportApplyStatusCell(row.getCell(1),item['识别状态'])});if(data.indieRows.length)exportApplyBody(indieSheet,indieHeaderRow+1,indieHeaderRow+data.indieRows.length,14);for(let r=indieHeaderRow+1;r<=indieHeaderRow+data.indieRows.length;r++)exportApplyStatusCell(indieSheet.getCell(r,1),indieSheet.getCell(r,1).value);indieSheet.autoFilter={from:{row:indieHeaderRow,column:1},to:{row:indieHeaderRow,column:14}};indieSheet.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9};
       exportAddDataSheet(workbook,{name:'90_UO规则',title:'UO 渠道规则',subtitle:'用于检查开票申请与往来公司对照；规则状态与当年申请使用情况一并展示。',headers:['状态','渠道','主体','开票公司','开票要求','规则说明','对照状态','当年申请笔数','当年申请金额'],rows:data.uoRows,widths:[12,14,12,34,14,34,20,16,18],tabColor:EXPORT_COLORS.slate,statusColumns:['状态','对照状态'],numericColumns:['当年申请金额'],xSplit:3});
+      exportAddDataSheet(workbook,{name:'06_匹配组',title:'匹配组',subtitle:'记录组合匹配形成的发票/回款匹配组，包含来源合计、业务明细合计与差额；本地确认人仅记录页面操作人，不代表 UO 系统身份。',headers:['匹配组ID','类型','状态','来源单据数','来源合计','业务明细数','业务明细合计','金额差额','确认人','确认时间','修改人','修改时间','来源单据','来源文件','人工调整'],rows:data.matchGroupRows,widths:[18,14,10,10,14,10,14,12,12,16,12,16,40,40,8],tabColor:EXPORT_COLORS.blue,statusColumns:['状态','人工调整'],numericColumns:['来源合计','业务明细合计','金额差额'],xSplit:2});
+      exportAddDataSheet(workbook,{name:'07_系统勾选',title:'系统勾选记录',subtitle:'记录每条业务明细在 UO 系统中是否已勾选，开票与回款独立追踪；本地确认人字段对应页面“当前操作人”，不等于 UO 系统身份认证。',headers:['匹配组ID','业务明细指纹','主体','收入月份','渠道','公司','游戏','应匹配金额','匹配组类型','开票勾选状态','开票确认人','开票确认时间','回款勾选状态','回款确认人','回款确认时间'],rows:data.checkStatusRows,widths:[18,28,10,10,10,24,8,14,10,12,12,16,12,12,16],tabColor:EXPORT_COLORS.green,statusColumns:['开票勾选状态','回款勾选状态'],numericColumns:['应匹配金额'],xSplit:2});
       exportAddDataSheet(workbook,{name:'91_独立游戏规则',title:'独立游戏 Mapping 规则',subtitle:'常用的识别规则在前，共用公司和待复核项使用状态色强调。',headers:['状态','渠道','主体','币种','银行对方名称基准','严格归一化名称','显式别名','样本月份','UO共用公司','本月命中笔数','本月命中金额'],rows:data.mappingRows,widths:[12,14,18,10,34,32,26,24,18,16,18],tabColor:EXPORT_COLORS.slate,statusColumns:['状态','UO共用公司'],numericColumns:['本月命中金额'],xSplit:4});
       const checkSheet=exportAddDataSheet(workbook,{name:'99_导入日志',title:'导入日志',subtitle:`导入状态：${data.summary.quality.errors?'有错误':data.summary.quality.warnings?'有提醒':'通过'} · ${data.summary.quality.passed} 项通过 · ${data.summary.quality.warnings} 类提醒 · ${data.summary.quality.errors} 项错误`,headers:['级别','类别','问题/检查项','影响数量','位置/范围','详情','处理建议'],rows:data.checks,widths:[12,14,40,14,20,48,38],tabColor:EXPORT_COLORS.slate,statusColumns:['级别'],xSplit:2});checkSheet.getColumn(4).numFmt='0" 项"';return workbook;
     }
@@ -848,7 +1227,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     els.fileInput.addEventListener('change',e=>handleFiles(e.target.files));
     function handleFiles(files){ if(!files.length)return; els.progress.classList.add('show'); els.fileInput.disabled=true; setTimeout(async()=>{try{await parseFiles(files)}catch(err){toast(err.message,true);addCheck('error','导入失败',err.message);renderChecks()}finally{els.progress.classList.remove('show');els.fileInput.disabled=false}},40); }
     ['dragenter','dragover'].forEach(n=>els.dropzone.addEventListener(n,e=>{e.preventDefault();els.dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(n=>els.dropzone.addEventListener(n,e=>{e.preventDefault();els.dropzone.classList.remove('drag')})); els.dropzone.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
-    els.month.addEventListener('change',()=>{state.month=els.month.value;state.expanded.clear();reconcile();renderAll()}); els.reset.addEventListener('click',reset);els.export.addEventListener('click',doExport);els.resultBody.addEventListener('click',onResultClick);els.resultBody.addEventListener('change',onResultChange);els.resultBody.addEventListener('input',onResultChange);
+    els.month.addEventListener('change',()=>{state.month=els.month.value;state.expanded.clear();reconcile();renderAll()}); els.reset.addEventListener('click',()=>{ if(state.dirty&&!confirm('存在未导出的人工操作（匹配组/系统勾选）。确定要重新导入并丢弃这些更改吗？')) return; clearDirty(); reset(); });els.export.addEventListener('click',doExport);els.resultBody.addEventListener('click',onResultClick);els.resultBody.addEventListener('change',onResultChange);els.resultBody.addEventListener('input',onResultChange);
     els.toggleUpload.addEventListener('click',()=>{els.uploadPanel.classList.toggle('is-collapsed');els.toggleUpload.textContent=els.uploadPanel.classList.contains('is-collapsed')?'查看文件':'收起文件'});
     $('#navCollapseBtn').addEventListener('click',toggleNavCollapsed);
     document.querySelectorAll('.primary-nav-item').forEach(item=>item.addEventListener('click',()=>switchModule(item.dataset.module)));
@@ -858,7 +1237,33 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     $('#addMappingBtn').addEventListener('click',()=>showMappingForm()); $('#closeMappingForm').addEventListener('click',hideMappingForm); $('#cancelMappingForm').addEventListener('click',hideMappingForm); els.mappingForm.addEventListener('submit',saveMappingForm); els.mappingBody.addEventListener('click',onMappingTableClick);
     $('#addUoMappingBtn').addEventListener('click',()=>showUoMappingForm()); $('#closeUoMappingForm').addEventListener('click',hideUoMappingForm); $('#cancelUoMappingForm').addEventListener('click',hideUoMappingForm); els.uoMappingForm.addEventListener('submit',saveUoMappingForm); els.uoMappingBody.addEventListener('click',onUoMappingTableClick);
     els.bankBody.addEventListener('click',onEntryBadgeClick); els.invoiceBody.addEventListener('click',onEntryBadgeClick);
+    els.bankBody.addEventListener('click',onComboStartClick); els.invoiceBody.addEventListener('click',onComboStartClick);
     document.querySelectorAll('[data-show-entered]').forEach(el=>el.addEventListener('change',()=>{state.showEntered=el.checked;document.querySelectorAll('[data-show-entered]').forEach(o=>o.checked=el.checked);renderUnmatched();renderKpis();}));
+    /* 组合匹配面板事件 */
+    els.comboClose.addEventListener('click',closeComboPanel); els.comboCancel.addEventListener('click',closeComboPanel);
+    els.comboConfirm.addEventListener('click',comboConfirm); els.comboDraft.addEventListener('click',comboSaveDraft);
+    els.comboSourceList.addEventListener('change',e=>{const t=e.target.closest('[data-combo-source]'); if(!t)return; comboToggleSource(t.dataset.comboSource); });
+    els.comboDetailList.addEventListener('change',e=>{const t=e.target.closest('[data-combo-detail]'); if(!t)return; comboToggleDetail(t.dataset.comboDetail); });
+    [els.comboFilterMonth,els.comboFilterChannel,els.comboFilterGame].forEach(el=>el.addEventListener('change',()=>{state.comboFilter.month=els.comboFilterMonth.value;state.comboFilter.channel=els.comboFilterChannel.value;state.comboFilter.game=els.comboFilterGame.value;renderComboPanel();}));
+    els.comboFilterSearch.addEventListener('input',()=>{state.comboFilter.q=normalizeText(els.comboFilterSearch.value);renderComboPanel();});
+    els.comboOnlyOpen.addEventListener('change',()=>{state.comboFilter.onlyOpen=els.comboOnlyOpen.checked;renderComboPanel();});
+    els.comboAllowFuture.addEventListener('change',()=>{state.comboFilter.allowFuture=els.comboAllowFuture.checked;renderComboPanel();});
+    els.comboShowOccupied.addEventListener('change',()=>{state.comboFilter.showOccupied=els.comboShowOccupied.checked;renderComboPanel();});
+    els.comboOverlay.addEventListener('click',e=>{if(e.target===els.comboOverlay)closeComboPanel();});
+    /* 系统勾选清单事件 */
+    document.querySelectorAll('[data-checklist-tab]').forEach(t=>t.addEventListener('click',()=>switchChecklistTab(t.dataset.checklistTab)));
+    [els.chkInvPendingBody,els.chkBankPendingBody,els.chkCheckedBody,els.chkExceptionBody].forEach(b=>b.addEventListener('click',onChecklistClick));
+    els.filterChecklistSearch.addEventListener('input',renderChecklist);
+    $('#chkMarkInvoiceBtn').addEventListener('click',()=>batchMarkCheck('invoice',CHECK_STATUS.CHECKED));
+    $('#chkMarkBankBtn').addEventListener('click',()=>batchMarkCheck('bank',CHECK_STATUS.CHECKED));
+    $('#chkUnmarkBtn').addEventListener('click',batchUnmarkCheck);
+    $('#chkMarkNoneBtn').addEventListener('click',batchMarkNone);
+    $('#chkSelectAll').addEventListener('change',e=>{document.querySelectorAll(`#tab-checklist-${state.checklistTab} [data-chk-select]`).forEach(c=>c.checked=e.target.checked);});
+    /* 操作人输入 */
+    els.operator.value=state.operator;
+    els.operator.addEventListener('input',()=>{state.operator=els.operator.value;saveOperator();});
+    /* 未导出提醒 */
+    window.addEventListener('beforeunload',e=>{ if(state.dirty){ e.preventDefault(); e.returnValue=''; return ''; } });
     const mascot=$('#piplupMascot'); mascot.addEventListener('click',()=>{const paused=mascot.classList.toggle('paused');mascot.setAttribute('aria-pressed',String(paused));mascot.setAttribute('aria-label',paused?'继续波加曼动效':'暂停波加曼动效');mascot.title=paused?'点击继续波加曼动效':'点击暂停波加曼动效'});
     updateNavCollapsed();
     renderAll();
