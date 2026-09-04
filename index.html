@@ -53,7 +53,7 @@
     @media(max-width:760px){.piplup-mascot{display:none}}
     @media(max-width:560px){main{width:calc(100% - 24px);padding:16px 0 38px}.topbar{padding:22px 0}.top-inner{width:calc(100% - 24px)}.topbar h1{font-size:23px}.primary-nav{padding:8px}.primary-nav-item,.app-shell.nav-collapsed .primary-nav-item{padding:9px}.nav-copy strong{font-size:12px}.nav-count,.app-shell.nav-collapsed .nav-count{display:none}.module-heading{display:block}.module-heading .btn{margin-top:10px}.kpis,.mapping-intro{grid-template-columns:1fr}.upload-panel{padding:16px}.tabs{overflow:auto}.month-wrap{order:3}.mapping-form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}}
     @media(prefers-reduced-motion:reduce){.piplup-mascot{animation:none}.piplup-mascot img{transition:none}}
-    .operator-wrap input{border:0;background:transparent;color:#fff;font-weight:700;outline:none;border-bottom:1px solid rgba(255,255,255,.32);min-width:96px;padding:4px 2px}.operator-wrap input::placeholder{color:#9fb6cf;font-weight:600}.operator-wrap input:focus{border-bottom-color:#fff}
+    @media(max-width:560px){.upload-panel .section-head{flex-wrap:wrap;gap:10px}.upload-panel .section-head h2{white-space:nowrap}.upload-panel .section-actions{flex-wrap:wrap}}
     .combo-overlay{position:fixed;inset:0;background:rgba(15,30,55,.55);backdrop-filter:blur(4px);z-index:30;display:grid;place-items:center;padding:24px;overflow:auto}.combo-overlay[hidden]{display:none}
     .combo-panel{width:min(1280px,calc(100% - 32px));max-height:calc(100vh - 48px);background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(15,30,55,.24);display:flex;flex-direction:column;overflow:hidden}
     .combo-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:#f7f9fc}.combo-head h3{margin:0 0 3px;font-size:17px}.combo-head p{margin:0;color:var(--muted);font-size:12px}
@@ -74,7 +74,7 @@
       <div><div class="eyebrow">UO FINANCE CONTROL</div><h1 id="pageTitle">回款与开票确认</h1><p id="pageLead">上传当月 Excel 后在浏览器本地完成匹配、复核与导出。文件不会发送到网络，也不会跨月保存。</p></div>
       <div class="top-actions">
         <div class="month-wrap monthly-action"><label for="monthSelect">核对月份</label><select id="monthSelect" disabled><option>—</option></select></div>
-        <div class="month-wrap monthly-action operator-wrap"><label for="operatorInput">本地确认人</label><input id="operatorInput" type="text" placeholder="姓名" autocomplete="off"></div>
+        <button id="appendFilesBtn" class="btn ghost monthly-action" type="button" disabled>补充文件</button>
         <button id="resetBtn" class="btn ghost monthly-action" disabled>重新导入</button>
         <button id="exportBtn" class="btn primary monthly-action" disabled>导出复核结果</button>
       </div>
@@ -97,12 +97,12 @@
           <div class="module-heading"><div><h2>开票回款核对</h2><p>以开票申请为起点，核对当月发票与银行回款。</p></div></div>
           <section class="panel upload-panel" id="uploadPanel">
             <div class="section-head">
-              <div><h2>导入月度文件</h2><p>一次选择开票申请、两份银行流水和两份全量发票清单；系统按字段和主体自动识别。</p></div>
+              <div><h2>导入月度文件</h2><p>选择开票申请及本次核对主体的银行流水、全量发票清单；支持分批补充，系统按字段和主体自动识别。</p></div>
               <div class="section-actions"><span id="importStatus" class="import-summary"><i></i><span>等待导入</span></span><span class="file-support" style="color:var(--muted);font-size:12px">支持 .xlsx / .xls</span><button id="toggleUploadDetails" class="btn small upload-toggle" type="button">查看文件</button></div>
             </div>
             <div id="uploadDetails" class="upload-details">
               <div id="dropzone" class="dropzone">
-                <strong>将 5 份 Excel 拖到这里</strong><span>或从本机选择文件，多选顺序不限</span>
+                <strong>将 Excel 文件拖到这里</strong><span>可一次选择，也可分批补充；已有文件会保留</span>
                 <label class="upload-button">选择 Excel<input id="fileInput" type="file" accept=".xlsx,.xls" multiple></label>
               </div>
               <div id="progress" class="progress">正在读取和核对文件…<div class="bar"><i></i></div></div>
@@ -370,7 +370,6 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     };
     const NAV_STORAGE_KEY='uo-primary-nav-v1';
     const ENTRY_STORAGE_KEY='uo-entry-status-v1';
-    const OPERATOR_STORAGE_KEY='uo-operator-v1';
     const MATCHGROUP_STORAGE_KEY='uo-match-groups-v1';
     const CHECKSTATUS_STORAGE_KEY='uo-check-status-v1';
     const SETTLEMENT_GROUPS = { '华为':'华为系', '鸿蒙':'华为系' };
@@ -378,9 +377,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     const CHECK_STATUS = { PENDING:'待勾选', CHECKED:'已勾选', NONE:'无需勾选' };
     const SETTLEMENT_DEFAULT = rule => SETTLEMENT_GROUPS[rule.channel] || '';
     const initialNavCollapsed=(()=>{try{return localStorage.getItem(NAV_STORAGE_KEY)!=='expanded'}catch{return true}})();
-    const state = { files:[], mapping:[], banks:[], invoices:[], indieMatches:[], months:[], month:'', results:[], checks:[], fileReports:[], overrides:{}, expanded:new Set(), currentTab:'results', currentModule:'reconcile', mappingTab:'uo', mappingFilter:'', mappingUnknown:[], navCollapsed:initialNavCollapsed, entryStatus:loadEntryStatus(), showEntered:false, matchGroups:loadMatchGroups(), checkStatus:loadCheckStatus(), operator:loadOperator(), comboDraft:null, comboFilter:{month:'',channel:'',game:'',q:'',onlyOpen:true,allowFuture:false,showOccupied:false}, checklistTab:'invoice-pending', dirty:false };
+    const state = { files:[], mapping:[], banks:[], invoices:[], indieMatches:[], months:[], month:'', results:[], checks:[], fileReports:[], overrides:{}, expanded:new Set(), currentTab:'results', currentModule:'reconcile', mappingTab:'uo', mappingFilter:'', mappingUnknown:[], navCollapsed:initialNavCollapsed, entryStatus:loadEntryStatus(), showEntered:false, matchGroups:loadMatchGroups(), checkStatus:loadCheckStatus(),  comboDraft:null, comboFilter:{month:'',channel:'',game:'',q:'',onlyOpen:true,allowFuture:false,showOccupied:false}, checklistTab:'invoice-pending', dirty:false };
     const $ = s => document.querySelector(s);
-    const els = { fileInput:$('#fileInput'),dropzone:$('#dropzone'),progress:$('#progress'),fileGrid:$('#fileGrid'),uploadPanel:$('#uploadPanel'),importStatus:$('#importStatus'),toggleUpload:$('#toggleUploadDetails'),workspace:$('#workspace'),month:$('#monthSelect'),operator:$('#operatorInput'),reset:$('#resetBtn'),export:$('#exportBtn'),resultBody:$('#resultBody'),bankBody:$('#bankBody'),invoiceBody:$('#invoiceBody'),indieBody:$('#indieBody'),indieSummary:$('#indieSummary'),indieEmpty:$('#indieEmpty'),indieContent:$('#indieContent'),mappingBody:$('#mappingBody'),uoMappingBody:$('#uoMappingBody'),mappingIntro:$('#mappingIntro'),mappingForm:$('#mappingForm'),uoMappingForm:$('#uoMappingForm'),checkList:$('#checkList'),toast:$('#toast'),
+    const els = { fileInput:$('#fileInput'),dropzone:$('#dropzone'),progress:$('#progress'),fileGrid:$('#fileGrid'),uploadPanel:$('#uploadPanel'),importStatus:$('#importStatus'),toggleUpload:$('#toggleUploadDetails'),workspace:$('#workspace'),month:$('#monthSelect'),reset:$('#resetBtn'),export:$('#exportBtn'),resultBody:$('#resultBody'),bankBody:$('#bankBody'),invoiceBody:$('#invoiceBody'),indieBody:$('#indieBody'),indieSummary:$('#indieSummary'),indieEmpty:$('#indieEmpty'),indieContent:$('#indieContent'),mappingBody:$('#mappingBody'),uoMappingBody:$('#uoMappingBody'),mappingIntro:$('#mappingIntro'),mappingForm:$('#mappingForm'),uoMappingForm:$('#uoMappingForm'),checkList:$('#checkList'),toast:$('#toast'),
       comboOverlay:$('#comboOverlay'),comboClose:$('#comboClose'),comboCancel:$('#comboCancel'),comboConfirm:$('#comboConfirm'),comboDraft:$('#comboDraft'),comboTitle:$('#comboTitle'),comboSub:$('#comboSub'),comboSourceType:$('#comboSourceType'),comboSourceList:$('#comboSourceList'),comboSourceTotal:$('#comboSourceTotal'),comboDetailList:$('#comboDetailList'),comboDetailTotal:$('#comboDetailTotal'),comboPoolCount:$('#comboPoolCount'),comboDelta:$('#comboDelta'),comboDeltaHint:$('#comboDeltaHint'),comboConflict:$('#comboConflict'),
       comboFilterMonth:$('#comboFilterMonth'),comboFilterChannel:$('#comboFilterChannel'),comboFilterGame:$('#comboFilterGame'),comboFilterSearch:$('#comboFilterSearch'),comboOnlyOpen:$('#comboOnlyOpen'),comboAllowFuture:$('#comboAllowFuture'),comboShowOccupied:$('#comboShowOccupied'),
       checklistEmpty:$('#checklistEmpty'),checklistContent:$('#checklistContent'),checklistSummary:$('#checklistSummary'),chkInvPendingBody:$('#checklistInvPendingBody'),chkBankPendingBody:$('#checklistBankPendingBody'),chkCheckedBody:$('#checklistCheckedBody'),chkExceptionBody:$('#checklistExceptionBody'),countChkInvPending:$('#countChkInvPending'),countChkBankPending:$('#countChkBankPending'),countChkChecked:$('#countChkChecked'),countChkException:$('#countChkException'),filterChecklistSearch:$('#filterChecklistSearch'),checklistResultCount:$('#checklistResultCount') };
@@ -408,10 +407,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function loadEntryStatus(){ try{return JSON.parse(localStorage.getItem(ENTRY_STORAGE_KEY)||'{}')||{}}catch{return{}} }
     function saveEntryStatus(){ try{localStorage.setItem(ENTRY_STORAGE_KEY,JSON.stringify(state.entryStatus))}catch(err){toast('录入状态无法写入本地存储',true)} }
     const isEntered = x => !!state.entryStatus[x.stableKey];
-    function toggleEntered(x){ if(state.entryStatus[x.stableKey]) delete state.entryStatus[x.stableKey]; else state.entryStatus[x.stableKey]=1; saveEntryStatus(); }
-    function loadOperator(){ try{return String(localStorage.getItem(OPERATOR_STORAGE_KEY)||'')}catch{return ''} }
-    function saveOperator(){ try{localStorage.setItem(OPERATOR_STORAGE_KEY,state.operator||'')}catch{} }
-    function currentOperator(){ return (state.operator||'').trim()||'未署名' }
+    function toggleEntered(x){ if(state.entryStatus[x.stableKey]) delete state.entryStatus[x.stableKey]; else state.entryStatus[x.stableKey]=1; saveEntryStatus(); markDirty(); }
+    // Keep historical attribution on existing records, but never reuse a hidden saved name for new actions.
+    function currentOperator(){ return '' }
     function detailFingerprint(detail){
       const parts=[detail.entity,detail.channelKey,detail.companyKey,detail.periodKey,String(detail.amount||''),detail.requestBatch||'',detail.sheet||'',detail.row||''];
       return `d|${parts.join('|')}`;
@@ -420,8 +418,16 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function saveMatchGroups(){ try{localStorage.setItem(MATCHGROUP_STORAGE_KEY,JSON.stringify(state.matchGroups.map(g=>({...g}))))}catch(err){toast('匹配组无法写入本地存储',true)} }
     function loadCheckStatus(){ try{return JSON.parse(localStorage.getItem(CHECKSTATUS_STORAGE_KEY)||'{}')||{}}catch{return{}} }
     function saveCheckStatus(){ try{localStorage.setItem(CHECKSTATUS_STORAGE_KEY,JSON.stringify(state.checkStatus))}catch(err){toast('勾选状态无法写入本地存储',true)} }
-    function markDirty(){ state.dirty=true }
+    let manualRevision=0;
+    function markDirty(){ state.dirty=true; manualRevision++ }
     function clearDirty(){ state.dirty=false }
+    let manualCheckpoint;
+    function manualSnapshot(){ return JSON.stringify({matchGroups:state.matchGroups,checkStatus:state.checkStatus,entryStatus:state.entryStatus}); }
+    function checkpointManualState(snapshot=manualSnapshot(),revision=manualRevision){ manualCheckpoint=snapshot; state.dirty=revision!==manualRevision; }
+    function discardUnexportedChanges(){
+      if(state.dirty&&manualCheckpoint){ Object.assign(state,JSON.parse(manualCheckpoint)); saveMatchGroups(); saveCheckStatus(); saveEntryStatus(); }
+      clearDirty();
+    }
     function nowTimestamp(){const d=new Date(),two=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${two(d.getMonth()+1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`}
     let INDIE_RULES = loadIndieRules();
     let UO_RULES = loadUoRules();
@@ -454,41 +460,158 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       for(const s of sheets){ for(const [type,req] of Object.entries(REQUIRED)){ const h=headerInfo(s.rows,req); if(h) found[type].push({...s,header:h}); } }
       return found;
     }
-    function addCheck(level,msg,detail=''){ state.checks.push({level,msg,detail}); }
-    async function parseFiles(files){
-      state.files=[...files].filter(f=>!f.name.startsWith('~$'));
-      state.mapping=[];state.banks=[];state.invoices=[];state.indieMatches=[];state.checks=[];state.fileReports=[];state.overrides={};state.expanded.clear();state.mappingUnknown=[];state.mappingFilter='';
-      if(!window.XLSX) throw new Error('Excel 组件未正确加载');
-      for(const file of state.files){
-        try{
-          const oldConsoleError=console.error;
-          console.error=(...args)=>{ if(!String(args[0]??'').includes('Bad uncompressed size')) oldConsoleError(...args); };
-          let wb;
-          try{ wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true,cellNF:false,cellText:false}); }
-          finally{ console.error=oldConsoleError; }
-          const sheets=workbookSheets(wb), found=classifySheets(sheets);
-          const types=Object.keys(found).filter(k=>found[k].length);
-          if(types.length!==1){ state.fileReports.push({name:file.name,type:'无法识别',entity:'',ok:false,detail:types.length?'同时命中多种表结构':'未找到所需字段'}); addCheck('error',`无法识别 ${file.name}`,'请确认这是开票申请、银行流水或全量发票清单。'); continue; }
-          const type=types[0]; let entities=[];
-          if(type==='mapping') entities=parseMapping(file.name,found.mapping);
-          if(type==='bank') entities=parseBank(file.name,found.bank);
-          if(type==='invoice') entities=parseInvoice(file.name,found.invoice);
-          state.fileReports.push({name:file.name,type:type==='mapping'?'开票申请':type==='bank'?'银行流水':'全量发票',entity:[...new Set(entities)].join(' / ')||'未识别',ok:entities.length>0,detail:`${found[type].length} 个有效工作表`});
-        }catch(err){ state.fileReports.push({name:file.name,type:'读取失败',entity:'',ok:false,detail:err.message}); addCheck('error',`读取失败：${file.name}`,err.message); }
+    function addCheck(level,msg,detail='',target=state,meta={}){ target.checks.push({level,msg,detail,...meta}); }
+    const importRecords=[];
+    let importing=false,exporting=false;
+    const importTypeLabel=type=>({mapping:'开票申请',bank:'银行流水',invoice:'全量发票'}[type]);
+    const sameBytes=(a,b)=>a.length===b.length&&a.every((byte,i)=>byte===b[i]);
+    const typedSourceKey=(type,key)=>`${type}|${key}`;
+    function sourceSignature(row){ return JSON.stringify([row.stableKey,row.companyKey,row.date,row.amount,row.currency,row.valid,row.status,row.positive,row.netAmount,row.taxAmount,row.taxRate]); }
+    function matchingSourceSignature(group,type){ return JSON.stringify((type==='bank'?state.banks:state.invoices).filter(r=>r.entity===group.entity&&r.companyKey===group.companyKey&&r.month===state.month).map(sourceSignature).sort()); }
+    function captureReviews(){
+      const reviews=new Map(),expanded=new Set();
+      for(const group of groupsForMonth()){
+        if(state.expanded.has(group.id)) expanded.add(group.key);
+        const override=state.overrides[group.id]; if(!override) continue;
+        const saved={details:group.items.map(detailFingerprint).sort().join('\n')};
+        for(const type of ['bank','invoice']){
+          const side=override[type]; if(!side||(!side.status&&side.selected===null)) continue;
+          const sources=type==='bank'?state.banks:state.invoices;
+          saved[type]={status:side.status,selected:side.selected===null?null:side.selected.map(id=>sources.find(r=>r.id===id)?.stableKey),signature:matchingSourceSignature(group,type)};
+        }
+        reviews.set(group.key,saved);
       }
+      return {reviews,expanded,sources:new Map(['bank','invoice'].flatMap(type=>(type==='bank'?state.banks:state.invoices).map(r=>[typedSourceKey(type,r.stableKey),sourceSignature(r)])))};
+    }
+    function restoreReviews(snapshot){
+      for(const group of groupsForMonth()){
+        if(snapshot.expanded.has(group.key)) state.expanded.add(group.id);
+        const saved=snapshot.reviews.get(group.key); if(!saved) continue;
+        for(const type of ['bank','invoice']){
+          const side=saved[type]; if(!side) continue;
+          const sources=type==='bank'?state.banks:state.invoices,byKey=new Map(sources.map(r=>[r.stableKey,r.id]));
+          if(saved.details!==group.items.map(detailFingerprint).sort().join('\n')||side.signature!==matchingSourceSignature(group,type)||side.selected?.some(key=>!byKey.has(key))){
+            addCheck('warn',`${group.entity} · ${group.channel}人工复核需重新确认`,'替换文件后，相关申请明细或来源单据发生变化；已撤下受影响的人工覆盖，其他复核记录保留。'); continue;
+          }
+          overrideFor(group.id)[type]={status:side.status,selected:side.selected===null?null:side.selected.map(key=>byKey.get(key))};
+        }
+      }
+      for(const type of ['bank','invoice']) for(const source of type==='bank'?state.banks:state.invoices){
+        const previous=snapshot.sources.get(typedSourceKey(type,source.stableKey));
+        if(previous&&previous!==sourceSignature(source)&&state.entryStatus[source.stableKey]){
+          delete state.entryStatus[source.stableKey]; saveEntryStatus(); markDirty();
+          addCheck('warn',`${source.entity} · ${source.company}录入状态需重新确认`,'同一单据的内容发生变化，已恢复为待处理。');
+        }
+      }
+    }
+    function importEntities(type,sheets,fileName){
+      if(type==='mapping') return [...new Set(sheets.map(s=>entityOf(s.name)).filter(Boolean))];
+      const canonical=type==='bank'?'原始流水对账单明细':'发票基础信息',preferred=sheets.filter(s=>s.name===canonical),chosen=preferred.length?preferred:sheets;
+      const field=type==='bank'?'本方账号名称':'销方名称',entities=new Set();
+      for(const sheet of chosen) for(const row of sheet.rows.slice(sheet.header.row+1)){
+        const entity=entityOf(row[sheet.header.index[field]]); if(entity) entities.add(entity);
+      }
+      // Empty statements still count as supplied files when their filename unambiguously identifies the owner.
+      if(!entities.size){
+        const hints=[/幻电/.test(fileName)?'上海幻电':'',/芜湖|享游/.test(fileName)?'芜湖享游':'',/bilibili.*hk/i.test(fileName)?'BILIBILI HK LIMITED':''].filter(Boolean);
+        if(hints.length===1) entities.add(hints[0]);
+      }
+      return [...entities];
+    }
+    async function readImportRecord(file,bytes){
+      const wb=XLSX.read(bytes,{type:'array',cellDates:true,cellNF:false,cellText:false});
+      const found=classifySheets(workbookSheets(wb)),types=Object.keys(found).filter(type=>found[type].length);
+      if(types.length!==1) throw new Error(types.length?'同时命中多种表结构':'未找到所需字段');
+      const type=types[0],sheets=found[type],entities=importEntities(type,sheets,file.name);
+      if(!entities.length) throw new Error('无法识别文件主体，请检查本方账号名称、销方名称或工作表名称');
+      const data={mapping:[],banks:[],invoices:[],checks:[]};
+      if(type==='mapping') parseMapping(file.name,sheets,data);
+      if(type==='bank') parseBank(file.name,sheets,data);
+      if(type==='invoice') parseInvoice(file.name,sheets,data);
+      return {file,bytes,type,entities,scope:[...entities],data,sheetCount:sheets.length};
+    }
+    function importCoverage(records){
+      const coverage=new Map();
+      for(const record of records) if(record.type!=='mapping') for(const entity of record.scope){
+        if(!coverage.has(entity)) coverage.set(entity,new Set()); coverage.get(entity).add(record.type);
+      }
+      return coverage;
+    }
+    function activeMatchGroups(){
+      const coverage=importCoverage(importRecords);
+      return state.matchGroups.filter(g=>[...g.sourceKeys.map(k=>k.split('|')[0]),...g.detailFps.map(fp=>fp.split('|')[1])].some(entity=>coverage.get(entity)?.has('bank')&&coverage.get(entity)?.has('invoice')));
+    }
+    async function parseFiles(files){
+      if(importing||exporting) return;
+      importing=true;
+      try{ await appendImportFiles(files); } finally{ importing=false; }
+    }
+    async function appendImportFiles(files){
+      if(!window.XLSX) throw new Error('Excel 组件未正确加载');
+      const staged=[...importRecords],notices=[]; let added=0;
+      for(const file of [...files].filter(f=>!f.name.startsWith('~$'))){
+        try{
+          if(!/\.xlsx?$/i.test(file.name)) throw new Error('仅支持 .xlsx / .xls 文件');
+          const bytes=new Uint8Array(await file.arrayBuffer());
+          if(staged.some(r=>sameBytes(r.bytes,bytes)&&r.scope.length===r.entities.length)){
+            notices.push({level:'warn',msg:`重复文件已跳过：${file.name}`,detail:'内容完全相同，不会重复累计。'}); continue;
+          }
+          const record=await readImportRecord(file,bytes);
+          const conflicts=staged.filter(r=>r.type===record.type&&(record.type==='mapping'||r.scope.some(e=>record.scope.includes(e))));
+          if(conflicts.length){
+            const names=conflicts.map(r=>`「${r.file.name}」`).join('、');
+            const prompt=record.type==='mapping'
+              ?`已有共享开票申请：${names}。\n\n是否用「${file.name}」替换整份申请表？\n新文件未包含的主体申请明细将不再参与核对。银行流水、发票及人工记录会保留，受影响的匹配需重新复核。`
+              :`${record.scope.join(' / ')}已有${importTypeLabel(record.type)}：${names}。\n\n是否用「${file.name}」替换对应资料？\n其他主体资料及未受影响的人工复核将保留；内容变化的匹配需重新复核。`;
+            if(!confirm(prompt)){notices.push({level:'warn',msg:`已取消替换：${file.name}`,detail:'原文件及复核记录已保留。'});continue;}
+            for(const old of conflicts){
+              const index=staged.indexOf(old),remaining=old.scope.filter(e=>!record.scope.includes(e));
+              if(record.type!=='mapping'&&remaining.length) staged[index]={...old,scope:remaining}; else staged.splice(index,1);
+            }
+          }
+          staged.push(record); added++;
+        }catch(err){notices.push({level:'warn',msg:`未导入：${file.name}`,detail:`${err.message}；已有文件及复核结果未被替换。`});}
+      }
+      state.checks=state.checks.filter(c=>!c.importNotice);
+      if(!added){
+        notices.forEach(c=>state.checks.push({...c,importNotice:true}));
+        if(notices.length) els.uploadPanel.classList.remove('is-collapsed');
+        renderChecks(); if(notices.length) toast(notices.map(c=>c.msg).join('；')); return;
+      }
+      const snapshot=captureReviews(),previousMonth=state.month,coverage=importCoverage(staged);
+      const ready=new Set([...coverage].filter(([,types])=>types.has('bank')&&types.has('invoice')).map(([entity])=>entity));
+      const next={files:staged.map(r=>r.file),mapping:[],banks:[],invoices:[],checks:[],fileReports:[]};
+      for(const record of staged){
+        for(const field of ['mapping','banks','invoices']) for(const row of record.data[field]){
+          if((!row.entity||record.scope.includes(row.entity))&&(field!=='mapping'||ready.has(row.entity))) next[field].push({...row});
+        }
+        next.checks.push(...record.data.checks.filter(c=>(!c.entity||record.scope.includes(c.entity))&&(record.type!=='mapping'||(c.entity?ready.has(c.entity):ready.size>0))));
+        next.fileReports.push({name:record.file.name,type:importTypeLabel(record.type),entity:record.scope.join(' / '),ok:true,detail:`${record.sheetCount} 个有效工作表${record.scope.length<record.entities.length?'；仅保留上述主体，其余已替换':''}`});
+      }
+      next.checks.push(...notices.map(c=>({...c,importNotice:true})));
+      importRecords.splice(0,importRecords.length,...staged);
+      Object.assign(state,next,{indieMatches:[],overrides:{},expanded:new Set(),mappingUnknown:[]});
       validateImports();
       const monthCounts={}; [...state.banks,...state.invoices].forEach(r=>{if(r.month) monthCounts[r.month]=(monthCounts[r.month]||0)+1});
-      state.months=Object.keys(monthCounts).sort().reverse(); state.month=state.months[0]||'';
+      state.months=Object.keys(monthCounts).sort().reverse(); state.month=state.months.includes(previousMonth)?previousMonth:state.months[0]||'';
+      restoreReviews(snapshot);
       auditImportedMapping();
-      validatePersistedMatchGroups();
+      validatePersistedMatchGroups(snapshot.sources);
+      if(state.checks.some(c=>c.level!=='ok')) els.uploadPanel.classList.remove('is-collapsed');
       renderFileGrid(); setupMonths(); reconcile(); renderAll();
+      toast(`已更新 ${state.files.length} 份文件${notices.length?`；${notices.length} 项上传提醒，请查看文件详情`:''}`);
     }
-    function validatePersistedMatchGroups(){
+    function validatePersistedMatchGroups(previousSources=new Map()){
       if(!state.matchGroups.length) return;
       const currentSourceKeys=new Set([...state.banks,...state.invoices].map(r=>r.stableKey));
       const currentDetailFps=new Set(state.mapping.map(detailFingerprint));
       const orphanGroups=[], orphanDetails=[];
-      for(const g of state.matchGroups){
+      for(const g of activeMatchGroups()){
+        delete g._orphan; delete g._orphanSources; delete g._orphanDetails;
+        const signatures=g.sourceSignatures||Object.fromEntries(g.sourceKeys.filter(k=>previousSources.has(typedSourceKey(g.type,k))).map(k=>[k,previousSources.get(typedSourceKey(g.type,k))]));
+        g._sourceChanged=g.sourceKeys.some(k=>{const row=sourceByStableKey(k,g.type);return row&&signatures[k]&&signatures[k]!==sourceSignature(row)});
+        if(Object.keys(signatures).length) g.sourceSignatures=signatures;
+        if(g._sourceChanged) addCheck('warn',`匹配组 ${g.id} 的来源内容已变更`,'原有勾选记录保留供回溯，请在系统勾选清单中重新复核该匹配组。');
         const missingSources=g.sourceKeys.filter(k=>!currentSourceKeys.has(k));
         const missingDetails=g.detailFps.filter(fp=>!currentDetailFps.has(fp));
         if(missingSources.length||missingDetails.length){ orphanGroups.push({g,missingSources,missingDetails}); if(missingDetails.length) orphanDetails.push(...missingDetails); }
@@ -498,24 +621,24 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
         for(const x of orphanGroups){ x.g._orphan=true; x.g._orphanSources=x.missingSources; x.g._orphanDetails=x.missingDetails; }
       }
     }
-    function parseMapping(fileName,sheets){
+    function parseMapping(fileName,sheets,target=state){
       const entities=[];
       const years=sheets.map(s=>sheetYear(s.name)).filter(Boolean).sort();
       const activeYear=years.at(-1)||'';
       const chosen=activeYear?sheets.filter(s=>sheetYear(s.name)===activeYear):sheets;
-      if(chosen.length<sheets.length) addCheck('ok',`Mapping 使用 ${activeYear} 年工作表`,`已识别 ${sheets.length} 个历史结构工作表，本次仅导入最新年度的 ${chosen.length} 个工作表。`);
-      for(const s of chosen){ const entity=entityOf(s.name); if(!entity){ addCheck('warn',`跳过 Mapping 工作表：${s.name}`,'工作表名称未包含“幻电”或“芜湖/享游”，无法判断主体。'); continue; } entities.push(entity);
+      if(chosen.length<sheets.length) addCheck('ok',`Mapping 使用 ${activeYear} 年工作表`,`已识别 ${sheets.length} 个历史结构工作表，本次仅导入最新年度的 ${chosen.length} 个工作表。`,target);
+      for(const s of chosen){ const entity=entityOf(s.name); if(!entity){ addCheck('warn',`跳过 Mapping 工作表：${s.name}`,'工作表名称未包含“幻电”或“芜湖/享游”，无法判断主体。',target); continue; } entities.push(entity);
         const h=s.header.index, requestDateColumn=h['申请开票时间']; let requestBatch='';
         for(let i=s.header.row+1;i<s.rows.length;i++){ const row=s.rows[i], amount=toNumber(row[h['开票金额']]); const company=displayText(row[h['公司名称']]), channel=displayText(row[h['渠道']]), period=periodStr(row[h['账期']]);
           const rawRequestDate=requestDateColumn===undefined?null:row[requestDateColumn]; if(rawRequestDate!==null&&rawRequestDate!==undefined&&displayText(rawRequestDate)) requestBatch=dateStr(rawRequestDate);
           if(!company&&!channel&&!Number.isFinite(amount)) continue;
-          if(!company||!channel||!period||!Number.isFinite(amount)){ addCheck('warn',`${fileName} · ${s.name} 第 ${i+1} 行未导入`,'渠道、公司名称、开票金额或账期为空/异常。'); continue; }
-          state.mapping.push({id:uid('m',state.mapping.length),entity,channel,channelKey:normalizeText(channel),company,companyKey:normalizeText(company),amount:round2(amount),period,periodKey:normalizeText(period),requestBatch,batchKey:normalizeText(requestBatch),file:fileName,sheet:s.name,row:i+1,sheetYear:sheetYear(s.name)});
+          if(!company||!channel||!period||!Number.isFinite(amount)){ addCheck('warn',`${fileName} · ${s.name} 第 ${i+1} 行未导入`,'渠道、公司名称、开票金额或账期为空/异常。',target,{entity}); continue; }
+          target.mapping.push({id:uid('m',target.mapping.length),entity,channel,channelKey:normalizeText(channel),company,companyKey:normalizeText(company),amount:round2(amount),period,periodKey:normalizeText(period),requestBatch,batchKey:normalizeText(requestBatch),file:fileName,sheet:s.name,row:i+1,sheetYear:sheetYear(s.name)});
         }
       }
       return entities;
     }
-    function parseBank(fileName,sheets){
+    function parseBank(fileName,sheets,target=state){
       const canonical=sheets.filter(s=>s.name==='原始流水对账单明细'); const chosen=canonical.length?canonical:sheets; const seen=new Set(), entities=[];
       for(const s of chosen){ const h=s.header.index;
         for(let i=s.header.row+1;i<s.rows.length;i++){ const row=s.rows[i], amount=toNumber(row[h['收入金额']]); if(!Number.isFinite(amount)||amount<=0) continue;
@@ -523,13 +646,13 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
           const date=row[h['交易日期']], month=monthStr(date); const currency=currencyKey(row[h['货币']]||'CNY'); const txn=displayText(row[h['交易流水号']]||row[h['系统ID']]);
           const summary=displayText(row[h['摘要']]), transactionType=displayText(row[h['交易类型']]), analysisCategory=displayText(row[h['分析类别']]);
           const key=txn?`${entity}|${txn}`:`${entity}|${dateStr(date)}|${company}|${cents(amount)}|${displayText(row[h['本方账号']])}`; if(seen.has(key)) continue; seen.add(key);
-          state.banks.push({id:uid('b',state.banks.length),stableKey:key,entity,company,companyKey:normalizeText(company),amount:round2(amount),date:dateStr(date),month,currency,summary,transactionType,analysisCategory,file:fileName,sheet:s.name,row:i+1,valid:!!entity&&!!month,reason:!entity?'主体无法识别':!month?'日期无法识别':currency!=='CNY'?'非人民币流水':''});
+          target.banks.push({id:uid('b',target.banks.length),stableKey:key,entity,company,companyKey:normalizeText(company),amount:round2(amount),date:dateStr(date),month,currency,summary,transactionType,analysisCategory,file:fileName,sheet:s.name,row:i+1,valid:!!entity&&!!month,reason:!entity?'主体无法识别':!month?'日期无法识别':currency!=='CNY'?'非人民币流水':''});
         }
       }
-      if(!canonical.length) addCheck('warn',`${fileName} 未找到“原始流水对账单明细”`,'已合并其他有效工作表并按交易标识去重。');
+      if(!canonical.length) addCheck('warn',`${fileName} 未找到“原始流水对账单明细”`,'已合并其他有效工作表并按交易标识去重。',target);
       return entities;
     }
-    function parseInvoice(fileName,sheets){
+    function parseInvoice(fileName,sheets,target=state){
       const canonical=sheets.filter(s=>s.name==='发票基础信息'); const chosen=canonical.length?canonical:sheets; const seen=new Set(), entities=[];
       for(const s of chosen){ const h=s.header.index;
         for(let i=s.header.row+1;i<s.rows.length;i++){ const row=s.rows[i], amount=toNumber(row[h['价税合计']]); if(!Number.isFinite(amount)) continue;
@@ -539,23 +662,28 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
           const key=no?`${entity}|${no}`:`${entity}|${dateStr(date)}|${company}|${cents(amount)}`; if(seen.has(key)) continue; seen.add(key);
           const valid=!!entity&&!!monthStr(date)&&status==='正常'&&(positive==='是'||positive==='Y'||positive==='正常')&&amount>0;
           let reason=''; if(!entity) reason='主体无法识别'; else if(!monthStr(date)) reason='日期无法识别'; else if(status!=='正常') reason=`发票状态：${status||'空'}`; else if(!(positive==='是'||positive==='Y'||positive==='正常')||amount<=0) reason='非正常正数发票';
-          state.invoices.push({id:uid('i',state.invoices.length),stableKey:key,entity,company,companyKey:normalizeText(company),amount:round2(amount),netAmount:Number.isFinite(rawNetAmount)?round2(rawNetAmount):null,taxRate,taxAmount:Number.isFinite(rawTaxAmount)?round2(rawTaxAmount):null,date:dateStr(date),month:monthStr(date),status,positive,no,file:fileName,sheet:s.name,row:i+1,valid,reason});
+          target.invoices.push({id:uid('i',target.invoices.length),stableKey:key,entity,company,companyKey:normalizeText(company),amount:round2(amount),netAmount:Number.isFinite(rawNetAmount)?round2(rawNetAmount):null,taxRate,taxAmount:Number.isFinite(rawTaxAmount)?round2(rawTaxAmount):null,date:dateStr(date),month:monthStr(date),status,positive,no,file:fileName,sheet:s.name,row:i+1,valid,reason});
         }
       }
-      if(!canonical.length) addCheck('warn',`${fileName} 未找到“发票基础信息”`,'已读取其他有效工作表并按发票号码去重。');
+      if(!canonical.length) addCheck('warn',`${fileName} 未找到“发票基础信息”`,'已读取其他有效工作表并按发票号码去重。',target);
       return entities;
     }
     function validateImports(){
       const types=state.fileReports.filter(r=>r.ok).reduce((a,r)=>(a[r.type]=(a[r.type]||0)+1,a),{});
       if(types['开票申请']!==1) addCheck('error','开票申请文件数量异常',`已识别 ${types['开票申请']||0} 份，应为 1 份。`);
-      for(const entity of ['上海幻电','芜湖享游']){
-        if(!state.banks.some(r=>r.entity===entity)) addCheck('error',`${entity}银行流水缺失`,'请上传包含该主体的银行流水文件。');
-        if(!state.invoices.some(r=>r.entity===entity)) addCheck('error',`${entity}全量发票清单缺失`,'请上传包含该主体的全量发票文件。');
-        if(!state.mapping.some(r=>r.entity===entity)) addCheck('error',`${entity} Mapping 缺失`,'开票申请中未识别到该主体工作表。');
+      for(const [entity,supplied] of importCoverage(importRecords)){
+        // HK belongs to the independent-game workflow, not the two-entity UO invoice workflow.
+        if(!['上海幻电','芜湖享游'].includes(entity)) continue;
+        const missing=['bank','invoice'].filter(type=>!supplied.has(type));
+        if(missing.length){
+          addCheck('warn',`${entity}待补充：缺少${missing.map(importTypeLabel).join('、')}`,'点击右上角“补充文件”继续上传；该主体暂不生成 UO 核对结论，其他主体可继续核对和导出。');
+        }else if(!state.mapping.some(r=>r.entity===entity)){
+          addCheck('error',`${entity}开票申请明细缺失`,'开票申请中没有可用的该主体明细，请检查对应工作表；不影响其他主体核对和导出。',state,{entity,blocking:false});
+        }
       }
-      if(state.files.length!==5) addCheck('warn','文件数量不是 5 份',`本次选择 ${state.files.length} 份；允许合并主体文件，但请核对导入检查。`);
       if(!state.checks.some(c=>c.level==='error')) addCheck('ok','必需数据结构检查通过',`导入 Mapping ${state.mapping.length} 行、收入流水 ${state.banks.length} 行、发票 ${state.invoices.length} 行。`);
     }
+    function canExport(){ return state.months.length>0&&!state.checks.some(c=>c.level==='error'&&c.blocking!==false); }
     function collectMappingGaps(){
       if(!state.mapping.length) return {unknown:[],mismatch:[],imported:[]};
       const active=UO_RULES.filter(r=>r.active!==false);
@@ -713,14 +841,14 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function statusOptions(type,current){ const ok=type==='invoice'?'已开票':'已回款', values=type==='invoice'?[ok,'待复核','部分匹配','冲突待复核','前期已开·待补查','本月未匹配']:[ok,'待复核','部分匹配','冲突待复核','本月未匹配']; return values.map(s=>`<option ${s===current?'selected':''}>${s}</option>`).join(''); }
     function renderFileGrid(){ els.fileGrid.innerHTML=state.fileReports.map(r=>`<div class="file-card ${r.ok?'ok':'bad'}"><div class="type">${esc(r.type)} · ${esc(r.entity)}</div><div class="name">${esc(r.name)}</div><div class="name">${esc(r.detail)}</div></div>`).join(''); }
     function renderImportStatus(){
-      if(!state.fileReports.length)return;
+      if(!state.fileReports.length&&!state.checks.length)return;
       const wasImported=els.uploadPanel.classList.contains('imported'), errors=state.checks.filter(c=>c.level==='error').length, warnings=state.checks.filter(c=>c.level==='warn').length, okFiles=state.fileReports.filter(r=>r.ok).length;
       els.uploadPanel.classList.add('imported'); els.importStatus.className=`import-summary ${errors?'error':warnings?'warn':''}`;
       els.importStatus.querySelector('span').textContent=`${okFiles}/${state.fileReports.length} 个文件已识别${errors?` · ${errors} 项错误`:warnings?` · ${warnings} 项提醒`:' · 校验通过'}`;
-      if(!wasImported&&!errors)els.uploadPanel.classList.add('is-collapsed');
+      if(!wasImported&&!errors&&!warnings)els.uploadPanel.classList.add('is-collapsed');
       els.toggleUpload.textContent=els.uploadPanel.classList.contains('is-collapsed')?'查看文件':'收起文件';
     }
-    function setupMonths(){ els.month.innerHTML=state.months.length?state.months.map(m=>`<option value="${m}" ${m===state.month?'selected':''}>${m}</option>`).join(''):'<option>—</option>'; els.month.disabled=!state.months.length; els.reset.disabled=false; els.export.disabled=!state.months.length||state.checks.some(c=>c.level==='error'); }
+    function setupMonths(){ els.month.innerHTML=state.months.length?state.months.map(m=>`<option value="${m}" ${m===state.month?'selected':''}>${m}</option>`).join(''):'<option>—</option>'; els.month.disabled=!state.months.length; els.reset.disabled=false; $('#appendFilesBtn').disabled=false; els.export.disabled=!canExport(); }
     function activeReconcileFilters(){
       const filters={entity:$('#filterEntity').value,channel:$('#filterChannel').value,period:$('#filterPeriod').value,invoice:$('#filterInvoice').value,bank:$('#filterBank').value,q:normalizeText($('#filterSearch').value)};
       filters.active=!!(filters.entity||filters.channel||filters.period||filters.invoice||filters.bank||filters.q);
@@ -821,12 +949,12 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function matchGroupTotal(group){ const sources=group.sourceKeys.map(k=>sourceByStableKey(k,group.type)).filter(Boolean); const details=group.detailFps.map(detailByFp).filter(Boolean); return {sourceTotal:sum(sources.map(x=>x.amount)),detailTotal:sum(details.map(x=>x.amount)),sourceCount:sources.length,detailCount:details.length} }
     function matchGroupDelta(group){ const t=matchGroupTotal(group); return round2(t.sourceTotal-t.detailTotal) }
     function matchGroupDerivedStatus(group){ const t=matchGroupTotal(group); const delta=cents(t.sourceTotal-t.detailTotal); if(group.status==='draft') return MATCH_STATUS.DRAFT; if(t.sourceCount===0||t.detailCount===0) return MATCH_STATUS.REVIEW; if(delta===0) return MATCH_STATUS.MATCHED; if(Math.abs(delta)<=100) return MATCH_STATUS.REVIEW; return MATCH_STATUS.PARTIAL }
-    function groupClosedOnSide(group,side){ if(!group||group.status!=='confirmed') return false; const allChecked=group.detailFps.every(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.CHECKED||s.status===CHECK_STATUS.NONE}); return allChecked }
+    function groupClosedOnSide(group,side){ if(!group||group.status!=='confirmed'||group._orphan||group._sourceChanged) return false; const allChecked=group.detailFps.every(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.CHECKED||s.status===CHECK_STATUS.NONE}); return allChecked }
     function groupCheckProgress(group,side){ if(!group) return {checked:0,total:0,fully:false}; const checked=group.detailFps.filter(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.CHECKED}).length; const none=group.detailFps.filter(fp=>{const s=checkStatusFor(fp,side);return s.status===CHECK_STATUS.NONE}).length; const total=group.detailFps.length; return {checked,none,total,fully:checked+none===total&&total>0,partial:checked>0&&checked<total} }
     function groupClosureLabel(group){ if(!group) return ''; const inv=groupCheckProgress(group,'invoice'), bank=groupCheckProgress(group,'bank'); const sideLabel=p=>p.fully?'已勾选':p.partial?'部分已勾选':'待勾选'; const invL=group.type==='invoice'?sideLabel(inv):'无需'; const bankL=group.type==='bank'?sideLabel(bank):'无需'; const own=group.type==='invoice'?sideLabel(inv):sideLabel(bank); return own }
     function newMatchGroupId(){ return `mg-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}` }
     function persistMatchGroup(group){ saveMatchGroups(); markDirty() }
-    function commitMatchGroup(group){ group.status='confirmed'; group.confirmer=currentOperator(); group.confirmTime=nowTimestamp(); group.modifier=currentOperator(); group.modifyTime=nowTimestamp(); persistMatchGroup(group) }
+    function commitMatchGroup(group){ group.status='confirmed'; group.confirmer=currentOperator(); group.confirmTime=nowTimestamp(); group.modifier=currentOperator(); group.modifyTime=nowTimestamp(); group.sourceSignatures=Object.fromEntries(group.sourceKeys.map(k=>[k,sourceSignature(sourceByStableKey(k,group.type))])); delete group._sourceChanged; delete group._orphan; delete group._orphanSources; delete group._orphanDetails; persistMatchGroup(group) }
     function updateMatchGroupMod(group){ group.modifier=currentOperator(); group.modifyTime=nowTimestamp(); persistMatchGroup(group) }
     function deleteMatchGroup(id){ const idx=state.matchGroups.findIndex(g=>g.id===id); if(idx>=0){ state.matchGroups.splice(idx,1); saveMatchGroups(); markDirty() } }
     function candidateSources(type,seedKey,excludeGroupId=null){
@@ -866,6 +994,8 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const delta=cents(t.sourceTotal-t.detailTotal);
       if(t.sourceCount===0) issues.push('未选择任何来源单据');
       if(t.detailCount===0) issues.push('未选择任何业务明细');
+      if(t.sourceCount!==group.sourceKeys.length) issues.push('部分来源单据已不在当前文件中，请先移除失效引用或补回原文件');
+      if(t.detailCount!==group.detailFps.length) issues.push('部分业务明细已不在当前文件中，请先移除失效引用或补回原文件');
       const occSources=new Set(); group.sourceKeys.forEach(k=>{const occ=isSourceOccupied(k,group.type,group.id); if(occ) occSources.add(k)});
       if(occSources.size) issues.push(`来源单据已被其他匹配组占用：${[...occSources].slice(0,3).map(k=>{const s=sourceByStableKey(k,group.type); return s?`${s.date} · ${s.company} · ¥${money(s.amount)}`:k}).join('；')}`);
       const occDetails=new Set(); group.detailFps.forEach(fp=>{if(isDetailOccupied(fp,group.type,group.id)) occDetails.add(fp)});
@@ -965,7 +1095,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     /* ====== 系统勾选清单 ====== */
     function checklistRows(){
       const rows=[];
-      for(const g of state.matchGroups){
+      for(const g of activeMatchGroups()){
         if(g.status!=='confirmed') continue;
         for(const fp of g.detailFps){ const d=detailByFp(fp); if(!d) continue; const inv=checkStatusFor(fp,'invoice'); const bank=checkStatusFor(fp,'bank'); rows.push({detail:d,group:g,inv,bank}); }
       }
@@ -977,6 +1107,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       return rows.filter(r=>normalizeText(r.detail.entity+r.detail.channel+r.detail.company+r.detail.period).includes(q));
     }
     function classifyChecklistRow(r){
+      if(r.group._orphan||r.group._sourceChanged) return 'exception';
       const isInvOkForGroup=r.group.type==='invoice'; const isBankOkForGroup=r.group.type==='bank';
       const invValid=isInvOkForGroup||r.inv.status!==CHECK_STATUS.PENDING;
       const bankValid=isBankOkForGroup||r.bank.status!==CHECK_STATUS.PENDING;
@@ -986,7 +1117,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       return r.group.type==='invoice'?'invoice-pending':'bank-pending';
     }
     function renderChecklist(){
-      const ready=state.months.length>0&&state.matchGroups.some(g=>g.status==='confirmed');
+      const ready=state.months.length>0&&activeMatchGroups().some(g=>g.status==='confirmed');
       els.checklistEmpty.hidden=ready; els.checklistContent.hidden=!ready;
       if(!ready){ $('#navCountChecklist').textContent='—'; return; }
       const all=checklistFilterRows(checklistRows());
@@ -1069,7 +1200,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const pendingBanks=scopedUnmatched.banks.filter(x=>!isEntered(x)).length, pendingInvoices=scopedUnmatched.invoices.filter(x=>!isEntered(x)).length, enteredCount=scopedUnmatched.banks.length-pendingBanks+scopedUnmatched.invoices.length-pendingInvoices;
       $('#kpiExpected').textContent='¥ '+money(expected);$('#kpiRows').textContent=filters.active?`筛选后 ${rows.length} / ${state.results.length} 组 Mapping`:`${rows.length} 组 Mapping`;$('#kpiInvoice').textContent='¥ '+money(invoiced);$('#kpiBank').textContent='¥ '+money(banked);$('#kpiReview').textContent='¥ '+money(review);$('#kpiUnmatched').textContent=pendingBanks+pendingInvoices;$('#kpiUnmatchedSub').textContent=(filters.active?'当前筛选范围 · 流水 + 发票':'流水 + 发票')+(enteredCount?` · 已录入 ${enteredCount}`:'');
     }
-    function updateNavigationCounts(){ $('#navCountReconcile').textContent=state.month?state.results.length:'—'; $('#navCountIndie').textContent=state.month?state.indieMatches.length:'—'; $('#navCountMapping').textContent=UO_RULES.filter(r=>r.active!==false).length+INDIE_RULES.filter(r=>r.active!==false).length; const chkGroups=state.matchGroups.filter(g=>g.status==='confirmed'); let chkInvPending=0, chkBankPending=0; for(const g of chkGroups){ for(const fp of g.detailFps){ const inv=checkStatusFor(fp,'invoice'); const bank=checkStatusFor(fp,'bank'); if(g.type==='invoice'&&inv.status===CHECK_STATUS.PENDING) chkInvPending++; if(g.type==='bank'&&bank.status===CHECK_STATUS.PENDING) chkBankPending++; } } $('#navCountChecklist').textContent=state.months.length?((chkInvPending+chkBankPending)||'—'):'—'; }
+    function updateNavigationCounts(){ $('#navCountReconcile').textContent=state.month?state.results.length:'—'; $('#navCountIndie').textContent=state.month?state.indieMatches.length:'—'; $('#navCountMapping').textContent=UO_RULES.filter(r=>r.active!==false).length+INDIE_RULES.filter(r=>r.active!==false).length; const chkGroups=activeMatchGroups().filter(g=>g.status==='confirmed'); let chkInvPending=0, chkBankPending=0; for(const g of chkGroups){ for(const fp of g.detailFps){ const inv=checkStatusFor(fp,'invoice'); const bank=checkStatusFor(fp,'bank'); if(g.type==='invoice'&&inv.status===CHECK_STATUS.PENDING) chkInvPending++; if(g.type==='bank'&&bank.status===CHECK_STATUS.PENDING) chkBankPending++; } } $('#navCountChecklist').textContent=state.months.length?((chkInvPending+chkBankPending)||'—'):'—'; }
     function renderAll(){ const ready=state.months.length>0; els.workspace.className=ready?'show':''; els.indieEmpty.hidden=ready; els.indieContent.hidden=!ready; $('#piplupMascot').classList.toggle('compact',ready); if(ready){state.indieMatches=classifyIndieBanks(); const ignoredBanks=state.banks.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length, ignoredInvoices=state.invoices.filter(r=>r.month===state.month&&!sourceInUoScope(r)).length; addCheckOnce('ok','非 UO 来源已排除',`按当年 Mapping 公司范围，忽略非 UO 收入流水 ${ignoredBanks} 行、非 UO 发票 ${ignoredInvoices} 行。`); renderFilters();renderResults();renderUnmatched();renderIndie();} else state.indieMatches=[]; renderMapping();renderChecks();renderChecklist();updateNavigationCounts(); }
     function updatePageHeader(){ const meta=PAGE_META[state.currentModule]||PAGE_META.reconcile; $('#pageTitle').textContent=meta.title; $('#pageLead').textContent=meta.lead; }
     function updateNavCollapsed(){ const shell=$('#appShell'),button=$('#navCollapseBtn'),collapsed=state.navCollapsed; shell.classList.toggle('nav-collapsed',collapsed); button.setAttribute('aria-expanded',String(!collapsed)); button.setAttribute('aria-label',collapsed?'展开工作区':'收起工作区'); button.title=collapsed?'展开工作区':'收起工作区'; button.querySelector('span').textContent=collapsed?'›':'‹'; }
@@ -1124,9 +1255,9 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function onUoMappingTableClick(e){ const button=e.target.closest('[data-uo-action]'); if(!button)return; const rule=UO_RULES.find(r=>r.id===button.dataset.ruleId); if(!rule)return; if(button.dataset.uoAction==='edit')showUoMappingForm(rule); if(button.dataset.uoAction==='toggle'){rule.active=rule.active===false;saveUoRules();renderAll();toast(rule.active?'UO 对照已启用':'UO 对照已停用')} }
     function onResultClick(e){ const t=e.target.closest('[data-action]'); if(!t)return; const id=t.dataset.id, r=state.results.find(x=>x.id===id); if(!r)return;
       if(t.dataset.action==='expand'){state.expanded.has(id)?state.expanded.delete(id):state.expanded.add(id);renderResults()}
-      if(t.dataset.action==='confirm'){ const side=t.dataset.side, ov=overrideFor(id)[side], selected=[...document.querySelectorAll(`input[data-action="candidate"][data-id="${id}"][data-side="${side}"]:checked`)].map(x=>x.dataset.source); ov.selected=selected; const source=side==='bank'?state.banks:state.invoices, selectedAmount=sum(selected.map(x=>source.find(s=>s.id===x)?.amount||0)); ov.status=cents(selectedAmount)===cents(r.amount)?(side==='bank'?'已回款':'已开票'):selectedAmount>0?'部分匹配':'本月未匹配'; renderAll();toast('人工匹配已更新') }
+      if(t.dataset.action==='confirm'){ const side=t.dataset.side, ov=overrideFor(id)[side], selected=[...document.querySelectorAll(`input[data-action="candidate"][data-id="${id}"][data-side="${side}"]:checked`)].map(x=>x.dataset.source); ov.selected=selected; const source=side==='bank'?state.banks:state.invoices, selectedAmount=sum(selected.map(x=>source.find(s=>s.id===x)?.amount||0)); ov.status=cents(selectedAmount)===cents(r.amount)?(side==='bank'?'已回款':'已开票'):selectedAmount>0?'部分匹配':'本月未匹配'; markDirty();renderAll();toast('人工匹配已更新') }
     }
-    function onResultChange(e){ const t=e.target;if(t.dataset.action==='status'){overrideFor(t.dataset.id)[t.dataset.side].status=t.value;renderAll()} }
+    function onResultChange(e){ const t=e.target;if(t.dataset.action==='status'){overrideFor(t.dataset.id)[t.dataset.side].status=t.value;markDirty();renderAll()} }
     function onEntryBadgeClick(e){ const t=e.target.closest('[data-entry]'); if(!t)return; const x=[...state.banks,...state.invoices].find(r=>r.stableKey===t.dataset.entry); if(!x)return; toggleEntered(x); renderUnmatched(); renderKpis(); toast(state.entryStatus[x.stableKey]?'已标记为已录入':'已恢复为待处理'); }
     const EXPORT_REVIEW_STATUSES=new Set(['待复核','部分匹配','冲突待复核']);
     const EXPORT_COLORS={navy:'FF102A43',blue:'FF1F5AA6',blueBg:'FFEAF2FF',green:'FF16804A',greenBg:'FFE8F5EC',amber:'FF9A6700',amberBg:'FFFFF3D6',red:'FFB42318',redBg:'FFFDECEC',slate:'FF52606D',slateBg:'FFF2F4F7',line:'FFD9E0E7',lightLine:'FFE8EDF2',ink:'FF172B3A',muted:'FF6B7785'};
@@ -1181,8 +1312,8 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       const rawChecks=[...state.fileReports.map(r=>({'类别':'文件识别','级别':r.ok?'通过':'错误','项目':r.name,'详情':`${r.type} · ${r.entity} · ${r.detail}`})),...state.checks.map(c=>({'类别':'导入检查','级别':c.level==='ok'?'通过':c.level==='warn'?'提醒':'错误','项目':c.msg,'详情':c.detail}))],checks=aggregateExportChecks(rawChecks);
       const rowsWithStatus=status=>resultRows.filter(r=>r['总状态']===status),sumRows=rows=>sum(rows.map(r=>r['申请金额'])),reviewRows=resultRows.filter(r=>['冲突待复核','待人工复核','双缺口'].includes(r['总状态'])),closedRows=rowsWithStatus('已闭环'),invoiceFollowRows=rowsWithStatus('待跟进开票'),bankFollowRows=rowsWithStatus('待跟进回款'),supplementRows=rowsWithStatus('待补前期票');
       const summary={generatedAt:exportTimestamp(),total:{count:resultRows.length,amount:sumRows(resultRows)},closed:{count:closedRows.length,amount:sumRows(closedRows)},review:{count:reviewRows.length,amount:sumRows(reviewRows)},invoiceFollow:{count:invoiceFollowRows.length,amount:sumRows(invoiceFollowRows)},bankFollow:{count:bankFollowRows.length,amount:sumRows(bankFollowRows)},supplement:{count:supplementRows.length,amount:sumRows(supplementRows)},invoiceProgress:{ok:resultRows.filter(r=>r['开票状态']==='已开票').length,review:resultRows.filter(r=>EXPORT_REVIEW_STATUSES.has(r['开票状态'])).length,unmatched:resultRows.filter(r=>r['开票状态']!=='已开票'&&!EXPORT_REVIEW_STATUSES.has(r['开票状态'])).length},bankProgress:{ok:resultRows.filter(r=>r['回款状态']==='已回款').length,review:resultRows.filter(r=>EXPORT_REVIEW_STATUSES.has(r['回款状态'])).length,unmatched:resultRows.filter(r=>r['回款状态']!=='已回款'&&!EXPORT_REVIEW_STATUSES.has(r['回款状态'])).length},quality:{passed:checks.filter(r=>r['级别']==='通过').length,warnings:checks.filter(r=>r['级别']==='提醒').length,warningRows:checks.filter(r=>r['级别']==='提醒').reduce((n,r)=>n+r['影响数量'],0),errors:checks.filter(r=>r['级别']==='错误').length},actions:resultRows.filter(r=>r['总状态']!=='已闭环').slice(0,8)};
-      const matchGroupRows=state.matchGroups.map(g=>{const t=matchGroupTotal(g);const sources=g.sourceKeys.map(k=>sourceByStableKey(k,g.type)).filter(Boolean);const srcFile=sources.map(s=>`${s.file}!${s.sheet}!R${s.row}`).join(' / ');const orphan=g._orphan;return {'匹配组ID':g.id,'类型':g.type==='invoice'?'发票匹配组':'回款匹配组','状态':orphan?'悬空':(MATCH_STATUS[g.status]||g.status),'来源单据数':t.sourceCount,'来源合计':t.sourceTotal,'业务明细数':t.detailCount,'业务明细合计':t.detailTotal,'金额差额':round2(t.sourceTotal-t.detailTotal),'确认人':g.confirmer||'','确认时间':g.confirmTime||'','修改人':g.modifier||'','修改时间':g.modifyTime||'','来源单据':sources.map(s=>`${s.date} · ${s.company} · ¥${money(s.amount)}`).join(' / '),'来源文件':srcFile,'人工调整':g._editingId?'是':'否'}});
-      const checkStatusRows=[];for(const g of state.matchGroups){if(g.status!=='confirmed')continue;for(const fp of g.detailFps){const d=detailByFp(fp);if(!d)continue;const inv=checkStatusFor(fp,'invoice'),bank=checkStatusFor(fp,'bank');checkStatusRows.push({'匹配组ID':g.id,'业务明细指纹':fp,'主体':d.entity,'收入月份':d.period,'渠道':d.channel,'公司':d.company,'游戏':detailGame(d),'应匹配金额':d.amount,'匹配组类型':g.type==='invoice'?'发票':'回款','开票勾选状态':inv.status,'开票确认人':inv.confirmer,'开票确认时间':inv.time,'回款勾选状态':bank.status,'回款确认人':bank.confirmer,'回款确认时间':bank.time});}}
+      const matchGroupRows=activeMatchGroups().map(g=>{const t=matchGroupTotal(g);const sources=g.sourceKeys.map(k=>sourceByStableKey(k,g.type)).filter(Boolean);const srcFile=sources.map(s=>`${s.file}!${s.sheet}!R${s.row}`).join(' / ');const orphan=g._orphan;return {'匹配组ID':g.id,'类型':g.type==='invoice'?'发票匹配组':'回款匹配组','状态':orphan?'悬空':g._sourceChanged?'来源变更待复核':(MATCH_STATUS[g.status]||g.status),'来源单据数':t.sourceCount,'来源合计':t.sourceTotal,'业务明细数':t.detailCount,'业务明细合计':t.detailTotal,'金额差额':round2(t.sourceTotal-t.detailTotal),'确认人':g.confirmer||'','确认时间':g.confirmTime||'','修改人':g.modifier||'','修改时间':g.modifyTime||'','来源单据':sources.map(s=>`${s.date} · ${s.company} · ¥${money(s.amount)}`).join(' / '),'来源文件':srcFile,'人工调整':g._editingId?'是':'否'}});
+      const checkStatusRows=[];for(const g of activeMatchGroups()){if(g.status!=='confirmed')continue;for(const fp of g.detailFps){const d=detailByFp(fp);if(!d)continue;const inv=checkStatusFor(fp,'invoice'),bank=checkStatusFor(fp,'bank');checkStatusRows.push({'匹配组ID':g.id,'业务明细指纹':fp,'主体':d.entity,'收入月份':d.period,'渠道':d.channel,'公司':d.company,'游戏':detailGame(d),'应匹配金额':d.amount,'匹配组类型':g.type==='invoice'?'发票':'回款','开票勾选状态':inv.status,'开票确认人':inv.confirmer,'开票确认时间':inv.time,'回款勾选状态':bank.status,'回款确认人':bank.confirmer,'回款确认时间':bank.time});}}
       return {resultRows,details,anomalies,indieRows,indieSummary,mappingRows,uoRows,checks,summary,matchGroupRows,checkStatusRows};
     }
     function exportColumnLetter(number){let n=number,label='';while(n>0){const rem=(n-1)%26;label=String.fromCharCode(65+rem)+label;n=Math.floor((n-1)/26)}return label}
@@ -1216,18 +1347,35 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       exportAddDataSheet(workbook,{name:'04_来源异常',title:'来源异常',subtitle:'仅展示需要处理的未匹配回款与发票；已确认的独立游戏回款只保留在“05_独立游戏”。',headers:['来源类型','归属判断','主体','日期','往来单位','币种','金额','税额','异常原因','处置状态','处理建议','单据状态','来源文件','工作表','来源行'],rows:data.anomalies,widths:[12,18,12,13,32,10,16,16,34,12,30,18,34,26,10],tabColor:EXPORT_COLORS.amber,statusColumns:['归属判断','处置状态'],numericColumns:['金额','税额'],dateColumns:['日期'],xSplit:5});
       const indieHeaderRow=6+data.indieSummary.length,indieSheet=workbook.addWorksheet('05_独立游戏',{views:[{state:'frozen',xSplit:2,ySplit:indieHeaderRow,showGridLines:false,zoomScale:90}]});indieSheet.properties.tabColor={argb:EXPORT_COLORS.amber};const indieHeaders=['识别状态','主体','交易日期','银行原始名称','映射公司','渠道','币种','银行到账金额','命中方式','置信度','冲突提示','来源文件','工作表','来源行'];[18,12,13,32,32,12,10,17,18,11,40,34,26,10].forEach((w,i)=>indieSheet.getColumn(i+1).width=w);indieSheet.mergeCells('A1:N1');indieSheet.getCell('A1').value='独立游戏回款';indieSheet.getCell('A1').font={name:'Microsoft YaHei',size:18,bold:true,color:{argb:EXPORT_COLORS.navy}};indieSheet.getRow(1).height=34;indieSheet.mergeCells('A2:N2');indieSheet.getCell('A2').value='金额始终按币种分开汇总，不对 CNY、USD 或其他币种直接合计。';indieSheet.getCell('A2').font={name:'Microsoft YaHei',size:10,color:{argb:EXPORT_COLORS.muted}};const summaryHeaders=['币种','命中笔数','确认笔数','待复核笔数','确认金额','待复核金额'];summaryHeaders.forEach((h,i)=>indieSheet.getCell(4,i+1).value=h);exportApplyHeader(indieSheet.getRow(4));data.indieSummary.forEach((item,i)=>{const row=indieSheet.getRow(5+i);summaryHeaders.forEach((h,c)=>row.getCell(c+1).value=item[h]);row.getCell(5).numFmt=EXPORT_MONEY_FORMAT;row.getCell(6).numFmt=EXPORT_MONEY_FORMAT});if(data.indieSummary.length)exportApplyBody(indieSheet,5,4+data.indieSummary.length,6);const indieTitleRow=5+data.indieSummary.length;indieSheet.mergeCells(indieTitleRow,1,indieTitleRow,14);indieSheet.getCell(indieTitleRow,1).value='识别明细';indieSheet.getCell(indieTitleRow,1).font={name:'Microsoft YaHei',size:13,bold:true,color:{argb:EXPORT_COLORS.navy}};indieHeaders.forEach((h,i)=>indieSheet.getCell(indieHeaderRow,i+1).value=h);exportApplyHeader(indieSheet.getRow(indieHeaderRow));data.indieRows.forEach((item,i)=>{const row=indieSheet.getRow(indieHeaderRow+1+i);indieHeaders.forEach((h,c)=>{let value=item[h]??'';if(value===''||value===null)return;if(h==='交易日期'&&typeof value==='string')value=new Date(`${value}T00:00:00`);row.getCell(c+1).value=value});row.getCell(3).numFmt='yyyy-mm-dd';row.getCell(8).numFmt=EXPORT_MONEY_FORMAT;row.getCell(10).numFmt='0.0%';exportApplyStatusCell(row.getCell(1),item['识别状态'])});if(data.indieRows.length)exportApplyBody(indieSheet,indieHeaderRow+1,indieHeaderRow+data.indieRows.length,14);for(let r=indieHeaderRow+1;r<=indieHeaderRow+data.indieRows.length;r++)exportApplyStatusCell(indieSheet.getCell(r,1),indieSheet.getCell(r,1).value);indieSheet.autoFilter={from:{row:indieHeaderRow,column:1},to:{row:indieHeaderRow,column:14}};indieSheet.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,paperSize:9};
       exportAddDataSheet(workbook,{name:'90_UO规则',title:'UO 渠道规则',subtitle:'用于检查开票申请与往来公司对照；规则状态与当年申请使用情况一并展示。',headers:['状态','渠道','主体','开票公司','开票要求','规则说明','对照状态','当年申请笔数','当年申请金额'],rows:data.uoRows,widths:[12,14,12,34,14,34,20,16,18],tabColor:EXPORT_COLORS.slate,statusColumns:['状态','对照状态'],numericColumns:['当年申请金额'],xSplit:3});
-      exportAddDataSheet(workbook,{name:'06_匹配组',title:'匹配组',subtitle:'记录组合匹配形成的发票/回款匹配组，包含来源合计、业务明细合计与差额；本地确认人仅记录页面操作人，不代表 UO 系统身份。',headers:['匹配组ID','类型','状态','来源单据数','来源合计','业务明细数','业务明细合计','金额差额','确认人','确认时间','修改人','修改时间','来源单据','来源文件','人工调整'],rows:data.matchGroupRows,widths:[18,14,10,10,14,10,14,12,12,16,12,16,40,40,8],tabColor:EXPORT_COLORS.blue,statusColumns:['状态','人工调整'],numericColumns:['来源合计','业务明细合计','金额差额'],xSplit:2});
-      exportAddDataSheet(workbook,{name:'07_系统勾选',title:'系统勾选记录',subtitle:'记录每条业务明细在 UO 系统中是否已勾选，开票与回款独立追踪；本地确认人字段对应页面“当前操作人”，不等于 UO 系统身份认证。',headers:['匹配组ID','业务明细指纹','主体','收入月份','渠道','公司','游戏','应匹配金额','匹配组类型','开票勾选状态','开票确认人','开票确认时间','回款勾选状态','回款确认人','回款确认时间'],rows:data.checkStatusRows,widths:[18,28,10,10,10,24,8,14,10,12,12,16,12,12,16],tabColor:EXPORT_COLORS.green,statusColumns:['开票勾选状态','回款勾选状态'],numericColumns:['应匹配金额'],xSplit:2});
+      exportAddDataSheet(workbook,{name:'06_匹配组',title:'匹配组',subtitle:'记录组合匹配形成的发票/回款匹配组，包含来源合计、业务明细合计与差额。历史确认人记录保留，新操作不采集姓名。',headers:['匹配组ID','类型','状态','来源单据数','来源合计','业务明细数','业务明细合计','金额差额','确认人','确认时间','修改人','修改时间','来源单据','来源文件','人工调整'],rows:data.matchGroupRows,widths:[18,14,10,10,14,10,14,12,12,16,12,16,40,40,8],tabColor:EXPORT_COLORS.blue,statusColumns:['状态','人工调整'],numericColumns:['来源合计','业务明细合计','金额差额'],xSplit:2});
+      exportAddDataSheet(workbook,{name:'07_系统勾选',title:'系统勾选记录',subtitle:'记录每条业务明细在 UO 系统中是否已勾选，开票与回款独立追踪。历史确认人记录保留，新操作不采集姓名。',headers:['匹配组ID','业务明细指纹','主体','收入月份','渠道','公司','游戏','应匹配金额','匹配组类型','开票勾选状态','开票确认人','开票确认时间','回款勾选状态','回款确认人','回款确认时间'],rows:data.checkStatusRows,widths:[18,28,10,10,10,24,8,14,10,12,12,16,12,12,16],tabColor:EXPORT_COLORS.green,statusColumns:['开票勾选状态','回款勾选状态'],numericColumns:['应匹配金额'],xSplit:2});
       exportAddDataSheet(workbook,{name:'91_独立游戏规则',title:'独立游戏 Mapping 规则',subtitle:'常用的识别规则在前，共用公司和待复核项使用状态色强调。',headers:['状态','渠道','主体','币种','银行对方名称基准','严格归一化名称','显式别名','样本月份','UO共用公司','本月命中笔数','本月命中金额'],rows:data.mappingRows,widths:[12,14,18,10,34,32,26,24,18,16,18],tabColor:EXPORT_COLORS.slate,statusColumns:['状态','UO共用公司'],numericColumns:['本月命中金额'],xSplit:4});
       const checkSheet=exportAddDataSheet(workbook,{name:'99_导入日志',title:'导入日志',subtitle:`导入状态：${data.summary.quality.errors?'有错误':data.summary.quality.warnings?'有提醒':'通过'} · ${data.summary.quality.passed} 项通过 · ${data.summary.quality.warnings} 类提醒 · ${data.summary.quality.errors} 项错误`,headers:['级别','类别','问题/检查项','影响数量','位置/范围','详情','处理建议'],rows:data.checks,widths:[12,14,40,14,20,48,38],tabColor:EXPORT_COLORS.slate,statusColumns:['级别'],xSplit:2});checkSheet.getColumn(4).numFmt='0" 项"';return workbook;
     }
     async function exportDownloadWorkbook(workbook,fileName){const buffer=await workbook.xlsx.writeBuffer(),blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=fileName;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000)}
-    async function doExport(){const previous=els.export.textContent;try{els.export.disabled=true;els.export.textContent='正在生成…';const data=exportRows(),workbook=exportBuildWorkbook(data);await exportDownloadWorkbook(workbook,`UO回款开票复核_${state.month.replace('-','')}.xlsx`);toast('复核结果已按新版式导出')}catch(err){console.error(err);toast(`导出失败：${err.message}`,true)}finally{els.export.textContent=previous;els.export.disabled=!state.months.length||state.checks.some(c=>c.level==='error')}}
+    async function doExport(){
+      if(importing||exporting||!canExport())return;
+      const previous=els.export.textContent,snapshot=manualSnapshot(),revision=manualRevision; exporting=true;
+      try{
+        els.export.disabled=true;els.export.textContent='正在生成…';els.fileInput.disabled=true;$('#appendFilesBtn').disabled=true;els.reset.disabled=true;els.month.disabled=true;
+        const data=exportRows(),workbook=exportBuildWorkbook(data);
+        await exportDownloadWorkbook(workbook,`UO回款开票复核_${state.month.replace('-','')}.xlsx`);
+        checkpointManualState(snapshot,revision);toast('复核结果已按新版式导出');
+      }catch(err){console.error(err);toast(`导出失败：${err.message}`,true)}
+      finally{exporting=false;els.export.textContent=previous;els.export.disabled=!canExport();els.fileInput.disabled=false;$('#appendFilesBtn').disabled=!state.files.length;els.reset.disabled=!state.files.length;els.month.disabled=!state.months.length;}
+    }
     function reset(){ location.reload(); }
     els.fileInput.addEventListener('change',e=>handleFiles(e.target.files));
-    function handleFiles(files){ if(!files.length)return; els.progress.classList.add('show'); els.fileInput.disabled=true; setTimeout(async()=>{try{await parseFiles(files)}catch(err){toast(err.message,true);addCheck('error','导入失败',err.message);renderChecks()}finally{els.progress.classList.remove('show');els.fileInput.disabled=false}},40); }
+    async function handleFiles(files){
+      const selected=[...files]; if(!selected.length||els.fileInput.disabled)return;
+      const append=$('#appendFilesBtn'),previous=append.textContent;
+      els.progress.classList.add('show'); els.fileInput.disabled=true; append.disabled=true; append.textContent='正在读取…'; els.reset.disabled=true; els.export.disabled=true; els.month.disabled=true;
+      try{await parseFiles(selected)}catch(err){toast(err.message,true);addCheck('warn','本次上传未完成',err.message,state,{importNotice:true});renderChecks()}
+      finally{els.progress.classList.remove('show');els.fileInput.disabled=false;els.fileInput.value='';append.textContent=previous;append.disabled=!state.files.length;els.reset.disabled=!state.files.length;els.export.disabled=!canExport();els.month.disabled=!state.months.length;}
+    }
+    $('#appendFilesBtn').addEventListener('click',()=>els.fileInput.click());
     ['dragenter','dragover'].forEach(n=>els.dropzone.addEventListener(n,e=>{e.preventDefault();els.dropzone.classList.add('drag')})); ['dragleave','drop'].forEach(n=>els.dropzone.addEventListener(n,e=>{e.preventDefault();els.dropzone.classList.remove('drag')})); els.dropzone.addEventListener('drop',e=>handleFiles(e.dataTransfer.files));
-    els.month.addEventListener('change',()=>{state.month=els.month.value;state.expanded.clear();reconcile();renderAll()}); els.reset.addEventListener('click',()=>{ if(state.dirty&&!confirm('存在未导出的人工操作（匹配组/系统勾选）。确定要重新导入并丢弃这些更改吗？')) return; clearDirty(); reset(); });els.export.addEventListener('click',doExport);els.resultBody.addEventListener('click',onResultClick);els.resultBody.addEventListener('change',onResultChange);els.resultBody.addEventListener('input',onResultChange);
+    els.month.addEventListener('change',()=>{state.month=els.month.value;state.expanded.clear();reconcile();renderAll()}); els.reset.addEventListener('click',()=>{ if(state.dirty&&!confirm('存在未导出的人工操作（人工复核/匹配组/系统勾选/录入状态）。确定要重新导入并丢弃这些更改吗？')) return; discardUnexportedChanges(); reset(); });els.export.addEventListener('click',doExport);els.resultBody.addEventListener('click',onResultClick);els.resultBody.addEventListener('change',onResultChange);els.resultBody.addEventListener('input',onResultChange);
     els.toggleUpload.addEventListener('click',()=>{els.uploadPanel.classList.toggle('is-collapsed');els.toggleUpload.textContent=els.uploadPanel.classList.contains('is-collapsed')?'查看文件':'收起文件'});
     $('#navCollapseBtn').addEventListener('click',toggleNavCollapsed);
     document.querySelectorAll('.primary-nav-item').forEach(item=>item.addEventListener('click',()=>switchModule(item.dataset.module)));
@@ -1259,14 +1407,12 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     $('#chkUnmarkBtn').addEventListener('click',batchUnmarkCheck);
     $('#chkMarkNoneBtn').addEventListener('click',batchMarkNone);
     $('#chkSelectAll').addEventListener('change',e=>{document.querySelectorAll(`#tab-checklist-${state.checklistTab} [data-chk-select]`).forEach(c=>c.checked=e.target.checked);});
-    /* 操作人输入 */
-    els.operator.value=state.operator;
-    els.operator.addEventListener('input',()=>{state.operator=els.operator.value;saveOperator();});
     /* 未导出提醒 */
     window.addEventListener('beforeunload',e=>{ if(state.dirty){ e.preventDefault(); e.returnValue=''; return ''; } });
     const mascot=$('#piplupMascot'); mascot.addEventListener('click',()=>{const paused=mascot.classList.toggle('paused');mascot.setAttribute('aria-pressed',String(paused));mascot.setAttribute('aria-label',paused?'继续波加曼动效':'暂停波加曼动效');mascot.title=paused?'点击继续波加曼动效':'点击暂停波加曼动效'});
     updateNavCollapsed();
     renderAll();
+    checkpointManualState();
     window.UOReconcile={state,parseFiles,reconcile,exportRows,exportBuildWorkbook,exportProgress,normalizeText,strictCompanyKey,coreCompanyKey,companySimilarity,bestIndieRule,classifyIndieBanks,indieRules:INDIE_RULES,uoRules:UO_RULES,round2,cents};
   })();
   </script>
