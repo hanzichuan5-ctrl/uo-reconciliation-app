@@ -27,6 +27,7 @@
     .upload-panel{padding:22px}.section-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:16px}.section-head h2{font-size:17px;margin:0 0 3px}.section-head p{margin:0;color:var(--muted)}.section-actions{display:flex;align-items:center;gap:9px}.import-summary{display:none;align-items:center;gap:9px;color:var(--muted);font-size:12px}.import-summary i{width:8px;height:8px;border-radius:50%;background:var(--green)}.import-summary.warn i{background:var(--amber)}.import-summary.error i{background:var(--red)}.upload-panel.imported .import-summary{display:flex}.upload-panel.imported .file-support{display:none}.upload-panel.is-collapsed{padding:16px 20px}.upload-panel.is-collapsed .section-head{margin:0;align-items:center}.upload-panel.is-collapsed .section-head p{display:none}.upload-panel.is-collapsed .upload-details{display:none}.upload-panel.is-collapsed .section-head h2{margin:0}.upload-toggle{display:none}.upload-panel.imported .upload-toggle{display:inline-flex}
     .dropzone{border:1.5px dashed #9eadc0;border-radius:12px;background:#f8fafc;padding:28px;text-align:center;transition:.15s}.dropzone.drag{border-color:var(--blue);background:#eef4ff}.dropzone strong{display:block;font-size:16px;margin-bottom:5px}.dropzone span{color:var(--muted)}
     .upload-button{display:inline-block;margin-top:14px;background:var(--navy);color:#fff;border-radius:9px;padding:9px 15px;font-weight:650;cursor:pointer}.upload-button input{display:none}
+    .file-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.file-remove{flex-shrink:0;border:1px solid #e4b7b2;border-radius:6px;background:#fff;color:#b42318;padding:4px 9px;font:inherit;font-size:12px;cursor:pointer}.file-remove:hover{background:#fff0ee}.file-remove:focus-visible{outline:2px solid #b42318;outline-offset:2px}
     .file-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:10px;margin-top:16px}.file-card{border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:68px}.file-card .type{font-weight:700}.file-card .name{color:var(--muted);font-size:12px;word-break:break-all}.file-card.ok{border-color:#a9d9c8;background:#f3fbf8}.file-card.bad{border-color:#f1b7b2;background:#fff7f6}
     .progress{display:none;margin-top:14px;color:var(--muted)}.progress.show{display:block}.bar{height:5px;background:#e8edf3;border-radius:99px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;width:45%;background:var(--blue);animation:loading 1.1s infinite ease-in-out}@keyframes loading{from{transform:translateX(-110%)}to{transform:translateX(240%)}}
     #workspace{display:none}#workspace.show{display:block}.kpis{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:12px;margin:18px 0}.kpi{padding:17px 18px}.kpi .label{font-size:12px;color:var(--muted);margin-bottom:6px}.kpi .value{font-size:23px;font-weight:760;letter-spacing:-.02em}.kpi .sub{font-size:12px;color:var(--muted);margin-top:4px}.kpi.warn .value{color:var(--amber)}.kpi.risk .value{color:var(--red)}
@@ -491,7 +492,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
           const side=saved[type]; if(!side) continue;
           const sources=type==='bank'?state.banks:state.invoices,byKey=new Map(sources.map(r=>[r.stableKey,r.id]));
           if(saved.details!==group.items.map(detailFingerprint).sort().join('\n')||side.signature!==matchingSourceSignature(group,type)||side.selected?.some(key=>!byKey.has(key))){
-            addCheck('warn',`${group.entity} · ${group.channel}人工复核需重新确认`,'替换文件后，相关申请明细或来源单据发生变化；已撤下受影响的人工覆盖，其他复核记录保留。'); continue;
+            addCheck('warn',`${group.entity} · ${group.channel}人工复核需重新确认`,'文件变更后，相关申请明细或来源单据发生变化；已撤下受影响的人工覆盖，其他复核记录保留。'); continue;
           }
           overrideFor(group.id)[type]={status:side.status,selected:side.selected===null?null:side.selected.map(key=>byKey.get(key))};
         }
@@ -578,6 +579,10 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
         if(notices.length) els.uploadPanel.classList.remove('is-collapsed');
         renderChecks(); if(notices.length) toast(notices.map(c=>c.msg).join('；')); return;
       }
+      rebuildImports(staged,notices);
+      toast(`已更新 ${state.files.length} 份文件${notices.length?`；${notices.length} 项上传提醒，请查看文件详情`:""}`);
+    }
+    function rebuildImports(staged,notices=[]){
       const snapshot=captureReviews(),previousMonth=state.month,coverage=importCoverage(staged);
       const ready=new Set([...coverage].filter(([,types])=>types.has('bank')&&types.has('invoice')).map(([entity])=>entity));
       const next={files:staged.map(r=>r.file),mapping:[],banks:[],invoices:[],checks:[],fileReports:[]};
@@ -599,7 +604,17 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       validatePersistedMatchGroups(snapshot.sources);
       if(state.checks.some(c=>c.level!=='ok')) els.uploadPanel.classList.remove('is-collapsed');
       renderFileGrid(); setupMonths(); reconcile(); renderAll();
-      toast(`已更新 ${state.files.length} 份文件${notices.length?`；${notices.length} 项上传提醒，请查看文件详情`:''}`);
+      els.reset.disabled=!state.files.length; $('#appendFilesBtn').disabled=!state.files.length;
+    }
+    function removeImportFile(index){
+      if(importing||exporting||!Number.isInteger(index)||!importRecords[index]) return;
+      const record=importRecords[index];
+      state.comboDraft=null;
+      rebuildImports(importRecords.filter((_,i)=>i!==index));
+      els.fileInput.value='';
+      els.uploadPanel.classList.remove('is-collapsed');
+      els.toggleUpload.textContent='收起文件';
+      toast(`已删除：${record.file.name}；可重新选择文件导入`);
     }
     function validatePersistedMatchGroups(previousSources=new Map()){
       if(!state.matchGroups.length) return;
@@ -839,7 +854,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
     function statusClass(s){ if(s==='前期已开·待补查') return 'wait'; if(s.startsWith('已')) return 'ok'; if(s==='待复核'||s==='部分匹配') return 'wait'; if(s==='冲突待复核') return 'risk'; return 'muted'; }
     function indieStatusClass(s){ if(s==='已识别独立游戏')return 'ok'; if(s==='规则冲突')return 'risk'; if(s.includes('候选')||s.includes('待复核'))return 'wait'; return 'muted'; }
     function statusOptions(type,current){ const ok=type==='invoice'?'已开票':'已回款', values=type==='invoice'?[ok,'待复核','部分匹配','冲突待复核','前期已开·待补查','本月未匹配']:[ok,'待复核','部分匹配','冲突待复核','本月未匹配']; return values.map(s=>`<option ${s===current?'selected':''}>${s}</option>`).join(''); }
-    function renderFileGrid(){ els.fileGrid.innerHTML=state.fileReports.map(r=>`<div class="file-card ${r.ok?'ok':'bad'}"><div class="type">${esc(r.type)} · ${esc(r.entity)}</div><div class="name">${esc(r.name)}</div><div class="name">${esc(r.detail)}</div></div>`).join(''); }
+    function renderFileGrid(){ els.fileGrid.innerHTML=state.fileReports.map((r,index)=>`<div class="file-card ${r.ok?'ok':'bad'}"><div class="file-card-header"><div class="type">${esc(r.type)} · ${esc(r.entity)}</div><button type="button" class="file-remove" data-remove-file="${index}" aria-label="删除 ${esc(r.name)}">删除</button></div><div class="name">${esc(r.name)}</div><div class="name">${esc(r.detail)}</div></div>`).join(''); }
     function renderImportStatus(){
       if(!state.fileReports.length&&!state.checks.length)return;
       const wasImported=els.uploadPanel.classList.contains('imported'), errors=state.checks.filter(c=>c.level==='error').length, warnings=state.checks.filter(c=>c.level==='warn').length, okFiles=state.fileReports.filter(r=>r.ok).length;
@@ -1365,6 +1380,7 @@ t.sheetStubs=true}if(t.type=="array"){t.type="binary";var a=xk(e,t);t.type="arra
       finally{exporting=false;els.export.textContent=previous;els.export.disabled=!canExport();els.fileInput.disabled=false;$('#appendFilesBtn').disabled=!state.files.length;els.reset.disabled=!state.files.length;els.month.disabled=!state.months.length;}
     }
     function reset(){ location.reload(); }
+    els.fileGrid.addEventListener('click',e=>{const button=e.target.closest('[data-remove-file]');if(button) removeImportFile(Number(button.dataset.removeFile));});
     els.fileInput.addEventListener('change',e=>handleFiles(e.target.files));
     async function handleFiles(files){
       const selected=[...files]; if(!selected.length||els.fileInput.disabled)return;
