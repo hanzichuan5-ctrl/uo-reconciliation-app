@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>月度工作台 · UO</title><link rel="stylesheet" href="/styles.css"></head>
+<link rel="stylesheet" href="/readable.css">
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="brand-icon">UO</span><span>财务工作台<small>CHANNEL OPERATIONS</small></span></a>
+    <div class="period-label">当前处理月份</div><select id="monthSelect" aria-label="当前处理月份"></select>
+    <nav aria-label="工作区域">
+      <button class="nav active" data-view="overview"><span class="nav-symbol">▦</span>月度概览</button>
+      <button class="nav" data-view="income"><span class="nav-symbol">▤</span>收入入账<span id="navIncome" class="nav-count"></span></button>
+      <button class="nav" data-view="receipts"><span class="nav-symbol">↙</span>回款填写<span id="navReceipt" class="nav-count"></span></button>
+      <div class="nav-divider"></div>
+      <button class="nav" data-view="sources"><span class="nav-symbol">▱</span>本月资料</button>
+      <button class="nav" data-view="history"><span class="nav-symbol">◷</span>处理记录</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="status-dot"></span> 本机保存<small>确认和进度随项目保留</small><a href="/api/backup" download>备份处理记录 ↗</a></div>
+  </aside>
+  <main>
+    <header class="topbar"><div class="breadcrumb">联运渠道 <span>/</span> <span id="breadcrumb">月度概览</span></div><span class="quiet" id="savedAt">正在载入…</span></header>
+    <div id="error" class="error" role="alert" hidden></div>
+    <div id="content" aria-live="polite"><div class="loading">正在读取本月资料与处理记录…</div></div>
+  </main>
+</div>
+<dialog id="detail"><div class="drawer-head"><div><span class="eyebrow" id="drawerEyebrow"></span><h2 id="drawerTitle"></h2></div><button class="icon-btn" id="closeDetail" aria-label="关闭详情">×</button></div><div id="drawerBody"></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+<script src="/app.js"></script>
+</body></html>
